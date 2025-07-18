@@ -2156,7 +2156,6 @@ local COLOR_EPSILON = 0.02
 
 local notifiedMutations = {}
 
--- ✅ Player count check
 local function isValidPlayerCount()
     local count = #Players:GetPlayers()
     return count >= 3 and count <= 8
@@ -2238,7 +2237,7 @@ local function checkBrainrotModels()
                     local key = obj:GetDebugId()
                     local mutation = nil
 
-                    -- 🌕💎🍬 Color mutation check
+                    -- Check root part color mutations
                     local color = root.Color
                     if colorsAreClose(color, colorGold) then
                         mutation = "🌕 Gold"
@@ -2248,24 +2247,30 @@ local function checkBrainrotModels()
                         mutation = "🍬 Candy"
                     end
 
-                    -- 🌈 Rainbow detection via Cube.006 MeshPart
-                    local meshPart = obj:FindFirstChild("Cube.006")
-                    if meshPart and meshPart:IsA("MeshPart") then
-                        local lastColor = meshPart:GetAttribute("LastBrickColor")
-                        local currentColor = meshPart.BrickColor.Color
+                    -- Scan all MeshParts starting with "Cube." for rainbow mutation
+                    local rainbowCubes = {}
 
-                        if lastColor then
-                            local lastVec = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
-                            local currentVec = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                            if (lastVec - currentVec).Magnitude > 0.01 then
-                                mutation = "🌈 Rainbow"
+                    for _, child in pairs(obj:GetChildren()) do
+                        if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
+                            local lastColor = child:GetAttribute("LastBrickColor")
+                            local currentColor = child.BrickColor.Color
+
+                            if lastColor then
+                                local lastVec = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
+                                local currentVec = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
+                                if (lastVec - currentVec).Magnitude > 0.01 then
+                                    table.insert(rainbowCubes, child.Name)
+                                end
                             end
-                        end
 
-                        meshPart:SetAttribute("LastBrickColor", currentColor)
+                            child:SetAttribute("LastBrickColor", currentColor)
+                        end
                     end
 
-                    -- 🕳️ If no mutation is found
+                    if #rainbowCubes > 0 then
+                        mutation = "🌈 Rainbow (" .. table.concat(rainbowCubes, ", ") .. ")"
+                    end
+
                     local finalMutation = mutation or "🕳️"
                     local notifyKey = key .. "|" .. finalMutation
                     if not notifiedMutations[notifyKey] then
@@ -2278,10 +2283,10 @@ local function checkBrainrotModels()
     end
 end
 
--- 🔁 Loop check every 0.5 seconds
 task.delay(0.5, function()
     while true do
         pcall(checkBrainrotModels)
         task.wait(0.5)
     end
 end)
+
