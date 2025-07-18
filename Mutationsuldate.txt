@@ -434,9 +434,9 @@ end
 local function TP(cf)
 	if root then
 		root.CFrame = cf + Vector3.new(
+			random:NextNumber(-0.00005, 0.0001),
 			random:NextNumber(-0.0001, 0.0001),
-			random:NextNumber(-0.0001, 0.0001),
-			random:NextNumber(-0.0001, 0.0001)
+			random:NextNumber(-0.0001, 0.00051)
 		)
 	end
 end
@@ -452,7 +452,7 @@ local function DeliverBrainrot()
 	local target = hitbox.CFrame * CFrame.new(0, -3, 0)
 	local voidCF = CFrame.new(0, -3.4028234663852886e+38, 0)
 
-	humanoid.WalkSpeed = 100000
+	humanoid.WalkSpeed = 38
 	local startTime = tick()
 	local teleporting = true
 
@@ -483,7 +483,7 @@ local function DeliverBrainrot()
 			heartbeatConn:Disconnect()
 			jumpConn:Disconnect()
 			teleporting = false
-			humanoid.WalkSpeed = 16
+			humanoid.WalkSpeed = 38
 		end
 	end)
 end
@@ -531,7 +531,7 @@ do
 			if conn then conn:Disconnect() end
 			humanoid = newChar:WaitForChild("Humanoid")
 			root = newChar:WaitForChild("HumanoidRootPart")
-			root.CustomPhysicalProperties = PhysicalProperties.new(500, 0.3, 0.5)
+			root.CustomPhysicalProperties = PhysicalProperties.new(25, 0.3, 0.5)
 			startHealthCheck()
 		end)
 	end
@@ -630,7 +630,7 @@ local jumpBoostEnabled = false
 local infiniteJumpEnabled = false
 
 --// Settings
-local jumpBoostForce = 67
+local jumpBoostForce = 71
 local infiniteJumpMin = 45
 local infiniteJumpMax = 60
 local jumpCooldown = 0.05
@@ -854,7 +854,7 @@ downButton.MouseButton1Click:Connect(disableCollisionTemporarily)
 
 --// Create Toggle Button in MainTab
 MainTab:CreateToggle({
-    Name = "🛠️ Up Down Steal Gui(PATCHED)",
+    Name = "🛠️ Up Down Steal Gui  (PATCHED)",
     CurrentValue = false,
     Callback = function(enabled)
         screenGui.Enabled = enabled
@@ -1726,14 +1726,14 @@ end
 })
 
 MainTab:CreateButton({
-Name = "🥷Steal Tween gui",
+Name = "🗡️Steal Tween gui",
 Callback = function()
 loadstring(game:HttpGet("https://pastebin.com/raw/qrFryUJ2",true))()
 end,
 })
 
 MainTab:CreateToggle({
-Name = "🪤Anti Trap", 
+Name = "🧀Anti Trap", 
 CurrentValue = false, 
 Flag = "AntiTrapToggle",
 Callback = function(s) 
