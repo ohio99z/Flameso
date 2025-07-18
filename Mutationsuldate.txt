@@ -468,7 +468,6 @@ MainTab:CreateToggle({
 })
 
 
---// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -480,9 +479,6 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local root = character:WaitForChild("HumanoidRootPart")
 local random = Random.new()
-
--- Apply heaviness to character
-root.CustomPhysicalProperties = PhysicalProperties.new(500, 0.3, 0.5)
 
 -- GUI Setup
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
@@ -661,12 +657,26 @@ do
 			if conn then conn:Disconnect() end
 			humanoid = newChar:WaitForChild("Humanoid")
 			root = newChar:WaitForChild("HumanoidRootPart")
-			root.CustomPhysicalProperties = PhysicalProperties.new(25, 0.3, 0.5)
 			startHealthCheck()
 		end)
 	end
 
 	startHealthCheck()
+end
+
+-- Heaviness control
+local normalProperties = nil
+local isHeavy = false
+
+local function setHeaviness(enable)
+	if enable and not isHeavy then
+		normalProperties = root.CustomPhysicalProperties
+		root.CustomPhysicalProperties = PhysicalProperties.new(500, 0.3, 0.5)
+		isHeavy = true
+	elseif not enable and isHeavy then
+		root.CustomPhysicalProperties = normalProperties
+		isHeavy = false
+	end
 end
 
 -- Button logic
@@ -681,8 +691,10 @@ MainTab:CreateToggle({
 	Flag = "KensInstantStealToggle",
 	Callback = function(state)
 		gui.Enabled = state
+		setHeaviness(state)
 	end,
 })
+
 
 -- Main heartbeat loop (runs each frame)
 RunService.Heartbeat:Connect(function()
