@@ -1,3 +1,133 @@
+-- 👆 GUI appears BEFORE Rayfield loading UI starts
+
+task.defer(function()
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+
+    local player = Players.LocalPlayer
+    local PlayerGui = player:WaitForChild("PlayerGui")
+
+    local discordLink = "https://discord.gg/C5N4Y4cqqN"
+
+    local translations = {
+        ["en"] = { join = "Join our Discord!", copy = "Copy Link", copied = "Copied Discord Link!" },
+        ["ar"] = { join = "انضم إلى ديسكوردنا!", copy = "نسخ الرابط", copied = "تم نسخ رابط الديسكورد!" },
+        ["fil"] = { join = "Sumali sa aming Discord!", copy = "Kopyahin ang Link", copied = "Nai-copy ang Discord Link!" },
+        ["pt"] = { join = "Junte-se ao nosso Discord!", copy = "Copiar Link", copied = "Link do Discord copiado!" },
+        ["es"] = { join = "¡Únete a nuestro Discord!", copy = "Copiar enlace", copied = "¡Enlace de Discord copiado!" },
+        ["fr"] = { join = "Rejoignez notre Discord !", copy = "Copier le lien", copied = "Lien Discord copié !" },
+        ["ru"] = { join = "Присоединяйтесь к нашему Discord!", copy = "Скопировать ссылку", copied = "Ссылка Discord скопирована!" },
+    }
+
+    local locale = player.LocaleId:sub(1,2):lower()
+    local texts = translations[locale] or translations["en"]
+
+    local function rainbowColor(t)
+        local r = (math.sin(t) * 0.5 + 0.5)
+        local g = (math.sin(t + 2 * math.pi / 3) * 0.5 + 0.5)
+        local b = (math.sin(t + 4 * math.pi / 3) * 0.5 + 0.5)
+        return Color3.new(r, g, b)
+    end
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "DiscordInviteGUI"
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.DisplayOrder = 999
+    ScreenGui.Parent = PlayerGui
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 320, 0, 110)
+    Frame.Position = UDim2.new(0.5, -160, 0.05, 0)
+    Frame.BackgroundColor3 = Color3.fromRGB(54, 57, 63)
+    Frame.BackgroundTransparency = 1
+    Frame.BorderSizePixel = 0
+    Frame.AnchorPoint = Vector2.new(0.5, 0)
+    Frame.ClipsDescendants = true
+    Frame.Active = true
+    Frame.Draggable = true
+    Frame.ZIndex = 100
+    Frame.Parent = ScreenGui
+
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 20)
+
+    local Glow = Instance.new("Frame", Frame)
+    Glow.Size = UDim2.new(1, 14, 1, 14)
+    Glow.Position = UDim2.new(0, -7, 0, -7)
+    Glow.BackgroundTransparency = 1
+    Glow.ZIndex = 99
+
+    local GlowStroke = Instance.new("UIStroke", Glow)
+    GlowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    GlowStroke.Thickness = 4
+    GlowStroke.Transparency = 0
+    GlowStroke.Color = Color3.fromRGB(255, 0, 0)
+
+    Instance.new("UICorner", Glow).CornerRadius = UDim.new(0, 20)
+
+    local TitleLabel = Instance.new("TextLabel", Frame)
+    TitleLabel.Size = UDim2.new(1, -20, 0, 30)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 10)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = texts.join
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 22
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Center
+    TitleLabel.TextTransparency = 1
+    TitleLabel.ZIndex = 101
+
+    local CopyButton = Instance.new("TextButton", Frame)
+    CopyButton.Size = UDim2.new(0, 150, 0, 45)
+    CopyButton.Position = UDim2.new(0.5, -75, 0, 55)
+    CopyButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CopyButton.TextSize = 18
+    CopyButton.Font = Enum.Font.GothamSemibold
+    CopyButton.Text = texts.copy
+    CopyButton.AutoButtonColor = true
+    CopyButton.BorderSizePixel = 0
+    CopyButton.BackgroundTransparency = 1
+    CopyButton.TextTransparency = 1
+    CopyButton.ZIndex = 101
+    Instance.new("UICorner", CopyButton).CornerRadius = UDim.new(0, 15)
+
+    TweenService:Create(Frame, TweenInfo.new(1), {BackgroundTransparency = 0.1}):Play()
+    TweenService:Create(TitleLabel, TweenInfo.new(1), {TextTransparency = 0}):Play()
+    TweenService:Create(CopyButton, TweenInfo.new(1), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+
+    local start = tick()
+    game:GetService("RunService").Heartbeat:Connect(function()
+        local t = tick() - start
+        GlowStroke.Color = rainbowColor(t * 2)
+    end)
+
+    local function fadeOut()
+        TweenService:Create(Frame, TweenInfo.new(1), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(TitleLabel, TweenInfo.new(1), {TextTransparency = 1}):Play()
+        TweenService:Create(CopyButton, TweenInfo.new(1), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        task.delay(1, function()
+            ScreenGui:Destroy()
+        end)
+    end
+
+    CopyButton.MouseButton1Click:Connect(function()
+        if setclipboard then setclipboard(discordLink) end
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Discord",
+                Text = texts.copied,
+                Duration = 3,
+                Icon = "rbxassetid://13412031254"
+            })
+        end)
+        fadeOut()
+    end)
+
+    task.delay(14, fadeOut)
+end)
+
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 -- Create the main window
