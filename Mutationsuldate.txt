@@ -388,36 +388,6 @@ end)
 -- UI Setup
 local MainTab = Window:CreateTab("🎯 Main", 6034818371)
 -- Below your Rayfield window and MainTab setup
-local autoSwordEnabled = false
-local lastUsed = 0
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-
--- Create the toggle
-MainTab:CreateToggle({
-Name = "🗡️Knock Back Arua Rainbow Sword",
-CurrentValue = false,
-Callback = function(enabled)
-autoSwordEnabled = enabled
-
--- Execute the remote once on toggle on
-if enabled then
-task.spawn(function()
-local args = { [1] = "Rainbowrath Sword" }
-local remote = ReplicatedStorage:FindFirstChild("Packages")
-:FindFirstChild("Net")
-:FindFirstChild("RF/CoinsShopService/RequestBuy")
-if remote then
-pcall(function()
-remote:InvokeServer(unpack(args))
-end)
-end
-end)
-end
-end,
-})
 
 local player = game:GetService("Players").LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -517,20 +487,6 @@ end
 end
 end)
 
-local bodyLockEnabled = false
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-
--- Create the toggle button in MainTab
-MainTab:CreateToggle({
-Name = "🎯Body Lock Nearby Players",
-CurrentValue = false,
-Flag = "BodyLockToggle",
-Callback = function(state)
-bodyLockEnabled = state
-end,
-})
 
 --// Services
 local Players = game:GetService("Players")
@@ -624,34 +580,6 @@ MainTab:CreateToggle({
 		jumpBoostEnabled = state
 	end
 })
-
-
--- Continuous loop: rotates your body each frame when toggle is on
-RunService.Heartbeat:Connect(function()
-if not bodyLockEnabled then return end
-
-local char = LocalPlayer.Character
-local hrp = char and char:FindFirstChild("HumanoidRootPart")
-if not hrp then return end
-
-local nearest, dist = nil, 30
-for _, p in ipairs(Players:GetPlayers()) do
-if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-local d = (hrp.Position - p.Character.HumanoidRootPart.Position).Magnitude
-if d <= dist then
-nearest, dist = p, d
-end
-end
-end
-
-if nearest then
-local targetHRP = nearest.Character.HumanoidRootPart
-hrp.CFrame = CFrame.lookAt(
-hrp.Position,
-Vector3.new(targetHRP.Position.X, hrp.Position.Y, targetHRP.Position.Z)
-)
-end
-end)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
