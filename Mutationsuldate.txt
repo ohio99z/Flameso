@@ -2015,7 +2015,7 @@ local function sendDiscordNotification(modelName, mutation)
     local message = string.format(
 [[---- <@&1392894797831733329> ----
 
---- 📢 **Game:** [❓] %s
+--- 📢 **Game:** [] %s
 --- 💡 Model Name: "%s | Mutation: %s"
 
 local player = game.Players.LocalPlayer
