@@ -2015,10 +2015,10 @@ local function sendDiscordNotification(modelName, mutation)
     local message = string.format(
 [[---- <@&1392894797831733329> ----
 
---- 📢 **Game:** [] %s
+--- 📢 **Game:**  %s
 --- 💡 Model Name: "%s | Mutation: %s"
 
-local player = game.Players.LocalPlayer
+local player = game.Players:GetPlayers()[1]
 local teleportService = game:GetService("TeleportService")
 teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, placeId, jobId)
@@ -2057,10 +2057,10 @@ local function checkBrainrotModels()
                     root:SetAttribute("CreationTime", tick())
                 elseif (tick() - creationTime) >= 1 then
                     local key = obj:GetDebugId()
-
-                    -- 🌕💎🍬 Check for color mutations
-                    local color = root.Color
                     local mutation = nil
+
+                    -- 🌕💎🍬 Color mutation check
+                    local color = root.Color
                     if colorsAreClose(color, colorGold) then
                         mutation = "🌕 Gold"
                     elseif colorsAreClose(color, colorDiamond) then
@@ -2069,12 +2069,7 @@ local function checkBrainrotModels()
                         mutation = "🍬 Candy"
                     end
 
-                    if mutation and not notifiedMutations[key .. mutation] then
-                        sendDiscordNotification(obj.Name, mutation)
-                        notifiedMutations[key .. mutation] = true
-                    end
-
-                    -- 🌈 Rainbow mutation detection via Cube.006 MeshPart
+                    -- 🌈 Rainbow detection via Cube.006 MeshPart
                     local meshPart = obj:FindFirstChild("Cube.006")
                     if meshPart and meshPart:IsA("MeshPart") then
                         local lastColor = meshPart:GetAttribute("LastBrickColor")
@@ -2084,15 +2079,19 @@ local function checkBrainrotModels()
                             local lastVec = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
                             local currentVec = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
                             if (lastVec - currentVec).Magnitude > 0.01 then
-                                local rainbowKey = key .. "🌈 Rainbow"
-                                if not notifiedMutations[rainbowKey] then
-                                    sendDiscordNotification(obj.Name, "🌈 Rainbow")
-                                    notifiedMutations[rainbowKey] = true
-                                end
+                                mutation = "🌈 Rainbow"
                             end
                         end
 
                         meshPart:SetAttribute("LastBrickColor", currentColor)
+                    end
+
+                    -- 🕳️ If no mutation is found
+                    local finalMutation = mutation or "🕳️"
+                    local notifyKey = key .. "|" .. finalMutation
+                    if not notifiedMutations[notifyKey] then
+                        sendDiscordNotification(obj.Name, finalMutation)
+                        notifiedMutations[notifyKey] = true
                     end
                 end
             end
