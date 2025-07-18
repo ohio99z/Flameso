@@ -460,7 +460,7 @@ end)
 
 -- 💢 Rayfield Toggle for Less Knock Back
 MainTab:CreateToggle({
-	Name = "💢 Less Knock Back",
+	Name = "💢 No Knock Back",
 	CurrentValue = false,
 	Callback = function(enabled)
 		setHeaviness(enabled)
