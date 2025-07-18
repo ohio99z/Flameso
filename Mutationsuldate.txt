@@ -2247,8 +2247,8 @@ local function checkBrainrotModels()
                         mutation = "🍬 Candy"
                     end
 
-                    -- Scan all MeshParts starting with "Cube." for rainbow mutation
-                    local rainbowCubes = {}
+                    -- Check for any rainbow cube mutation (no names in message)
+                    local rainbowFound = false
 
                     for _, child in pairs(obj:GetChildren()) do
                         if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
@@ -2259,7 +2259,7 @@ local function checkBrainrotModels()
                                 local lastVec = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
                                 local currentVec = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
                                 if (lastVec - currentVec).Magnitude > 0.01 then
-                                    table.insert(rainbowCubes, child.Name)
+                                    rainbowFound = true
                                 end
                             end
 
@@ -2267,8 +2267,8 @@ local function checkBrainrotModels()
                         end
                     end
 
-                    if #rainbowCubes > 0 then
-                        mutation = "🌈 Rainbow (" .. table.concat(rainbowCubes, ", ") .. ")"
+                    if rainbowFound then
+                        mutation = "🌈 Rainbow"
                     end
 
                     local finalMutation = mutation or "🕳️"
