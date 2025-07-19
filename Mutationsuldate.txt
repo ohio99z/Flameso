@@ -125,7 +125,7 @@ task.defer(function()
         fadeOut()
     end)
 
-    task.delay(14, fadeOut)
+    task.delay(16, fadeOut)
 end)
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
@@ -1826,7 +1826,7 @@ local function checkBrainrots()
 						mutation = "🌈 Rainbow"
 					end
 
-					local money = findNearbyMoneyText(root.Position, 5) or "N/A"
+					local money = findNearbyMoneyText(root.Position, 7) or "N/A"
 					sendNotification(model.Name, mutation, money)
 					notified[id] = true
 				end
