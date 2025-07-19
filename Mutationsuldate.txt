@@ -1812,7 +1812,7 @@ local function checkBrainrots()
                         end
                     end
 
-                    local money = findNearbyMoneyText(root.Position, 20) or "N/A"
+                    local money = findNearbyMoneyText(root.Position, 7) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
