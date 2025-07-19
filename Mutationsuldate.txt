@@ -1707,7 +1707,6 @@ local brainrotGods = {
     ["Pot Hotspot"] = true,
     ["Las Tralaleritas"] = true,
     ["Torrtuginni Dragonfrutini"] = true,
-    ["Noobini Pizzanini"] = true,
 }
 
 local colorGold    = Color3.fromRGB(237, 178, 0)
