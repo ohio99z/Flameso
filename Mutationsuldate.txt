@@ -132,7 +132,7 @@ local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 -- Create the main window
 local Window = Rayfield:CreateWindow({
-Name = "Steal a Brain Rot Destroyer v2 Zues Hub",
+Name = "Steal a Brain Rot Destroyer v2 Ken Hub",
 LoadingTitle = "made by ken_i",
 LoadingSubtitle = "Using Rayfield",
 ConfigurationSaving = { Enabled = true },
