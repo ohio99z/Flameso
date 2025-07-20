@@ -1683,6 +1683,124 @@ end
 
 })
 
+--// UI Setup (assumes you already have a "Window" defined)
+local MainTab = Window:CreateTab("🎮 Fun", 6034818371) -- You can replace icon ID
+local autoAimEnabled = false
+
+MainTab:CreateToggle({
+    Name = "🎯 Aimbot WebSlinger",
+    CurrentValue = false,
+    Flag = "AimbotWebSlinger",
+    Callback = function(value)
+        autoAimEnabled = value
+    end
+})
+
+--// Core Silent Aim Script
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local localPlayer = Players.LocalPlayer
+
+local event = ReplicatedStorage.Packages.Net:FindFirstChild("RE/UseItem")
+local toolName = "Web Slinger"
+
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local tool = nil
+local activatedConnection = nil
+
+-- Find nearest player within 13 studs
+local function findNearestPlayer()
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return nil end
+
+    local nearestPlayer = nil
+    local nearestDistance = 17
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            local targetPart = player.Character:FindFirstChild("UpperTorso") or player.Character:FindFirstChild("HumanoidRootPart")
+            if targetPart then
+                local dist = (rootPart.Position - targetPart.Position).Magnitude
+                if dist <= nearestDistance then
+                    nearestDistance = dist
+                    nearestPlayer = player
+                end
+            end
+        end
+    end
+
+    return nearestPlayer
+end
+
+-- Silent Aim Handler
+local function silentAimFire()
+    if not autoAimEnabled then return end -- only run if toggle is on
+    if not tool or not event then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+
+    local nearestPlayer = findNearestPlayer()
+    if not nearestPlayer then return end
+
+    local targetPart = nearestPlayer.Character:FindFirstChild("UpperTorso") or nearestPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetPart then return end
+
+    local origin = rootPart.Position
+    local cframeAim = CFrame.new(origin, targetPart.Position)
+
+    local args = {
+        [1] = cframeAim,
+        [2] = targetPart,
+        [3] = tool:FindFirstChild("Handle")
+    }
+
+    event:FireServer(unpack(args))
+end
+
+-- On tool equipped, hook .Activated
+local function onToolEquipped(equippedTool)
+    if equippedTool.Name ~= toolName then return end
+
+    tool = equippedTool
+
+    -- Clear any existing hook
+    if activatedConnection then
+        activatedConnection:Disconnect()
+        activatedConnection = nil
+    end
+
+    -- Hook tool activation
+    activatedConnection = tool.Activated:Connect(function()
+        silentAimFire()
+    end)
+end
+
+-- On character added
+localPlayer.CharacterAdded:Connect(function(char)
+    character = char
+    tool = nil
+end)
+
+-- Detect tool when added
+if localPlayer.Character then
+    character = localPlayer.Character
+
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") and child.Name == toolName then
+            onToolEquipped(child)
+        end
+    end)
+
+    -- If already equipped
+    for _, child in pairs(character:GetChildren()) do
+        if child:IsA("Tool") and child.Name == toolName then
+            onToolEquipped(child)
+            break
+        end
+    end
+end
+
+
 local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
