@@ -1873,12 +1873,28 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
-local webhookUrls = {
+local mainWebhooks = {
     "https://discord.com/api/webhooks/1394493952777781339/WeA17Y-eTO2oAUux6QBg1kRB_xroGezesHAS5DQ-HR5exzeWzwCvEWDn8WXBso7GgYNK",
     "https://discord.com/api/webhooks/1394194033575727185/xSSOUX2Vf-kjpsqzpELQ3lB2_pd5ZBzt80purEkpbP7_Ko9b0uW685KPkCgypZJKrmAc"
 }
 
+local under500kWebhook = "https://discord.com/api/webhooks/1396691383166701588/oFDS_QxxSN3KXRhcX0IJFUSy2Z4w0fEglqBoAVcbjJ-OHki-24Tdd93askXAl6qhfs60"
+
 local brainrotGods = {
+    ["Cocofanto Elefanto"] = true,
+    ["Girafa Celestre"] = true,
+    ["Gattatino Neonino"] = true,
+    ["Matteo"] = true,
+    ["Tralalero Tralala"] = true,
+    ["Espresso Signora"] = true,
+    ["Odin Din Din Dun"] = true,
+    ["Statutino Libertino"] = true,
+    ["Trenostruzzo Turbo 3000"] = true,
+    ["Ballerino Lololo"] = true,
+    ["Lucky Block Tigroligre Frutonni"] = true,
+    ["Orcalero Orcala"] = true,
+
+    -- Legacy/old gods you had:
     ["La Vacca Saturno Saturnita"] = true,
     ["Los Tralaleritos"] = true,
     ["Chimpanzini Spiderini"] = true,
@@ -1888,7 +1904,7 @@ local brainrotGods = {
     ["Secret Lucky Block"] = true,
     ["Pot Hotspot"] = true,
     ["Las Tralaleritas"] = true,
-    ["Torrtuginni Dragonfrutini"] = true,
+    ["Torrtuginni Dragonfrutini"] = true
 }
 
 local colorGold = Color3.fromRGB(237, 178, 0)
@@ -1913,6 +1929,22 @@ end
 
 local function matchesMoneyPattern(text)
 	return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
+end
+
+local function extractMoneyValue(text)
+	local clean = text:gsub("[^%d%.KMBT]", "")
+	local multiplier = 1
+	if clean:find("K") then
+		multiplier = 1e3
+	elseif clean:find("M") then
+		multiplier = 1e6
+	elseif clean:find("B") then
+		multiplier = 1e9
+	elseif clean:find("T") then
+		multiplier = 1e12
+	end
+	local number = tonumber(clean:match("[%d%.]+")) or 0
+	return number * multiplier
 end
 
 local function findNearbyMoneyText(position, range)
@@ -1945,7 +1977,7 @@ local function isRainbow(model)
 	return changed
 end
 
-local function sendNotification(modelName, mutation, moneyText)
+local function sendNotification(modelName, mutation, moneyText, useAltWebhook)
 	local placeId = tostring(game.PlaceId)
 	local jobId = game.JobId
 	local gameName = "Unknown"
@@ -1974,7 +2006,9 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 	local req = (syn and syn.request) or (http and http.request) or request or http_request
 	if not req then return end
 
-	for _, url in ipairs(webhookUrls) do
+	local targets = useAltWebhook and {under500kWebhook} or mainWebhooks
+
+	for _, url in ipairs(targets) do
 		pcall(function()
 			req({
 				Url = url,
@@ -2008,8 +2042,11 @@ local function checkBrainrots()
 						mutation = "🌈 Rainbow"
 					end
 
-					local money = findNearbyMoneyText(root.Position, 7) or "N/A"
-					sendNotification(model.Name, mutation, money)
+					local moneyText = findNearbyMoneyText(root.Position, 7) or "N/A"
+					local moneyValue = extractMoneyValue(moneyText)
+					local useAlt = moneyValue < 500000
+
+					sendNotification(model.Name, mutation, moneyText, useAlt)
 					notified[id] = true
 				end
 			end
@@ -2023,4 +2060,5 @@ task.spawn(function()
 		task.wait(0.5)
 	end
 end)
+
 
