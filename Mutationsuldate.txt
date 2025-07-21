@@ -1306,6 +1306,34 @@ EspTab:CreateToggle({
 
 local UtilsTab = Window:CreateTab("🛠️ Utils", 6034818371)
 
+local vu = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local antiAfkConnection = nil
+
+UtilsTab:CreateToggle({
+	Name = "🛡️ Anti-AFK",
+	CurrentValue = false,
+	Callback = function(enabled)
+		if enabled then
+			if not antiAfkConnection then
+				antiAfkConnection = player.Idled:Connect(function()
+					vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+					wait(1)
+					vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+				end)
+			end
+		else
+			if antiAfkConnection then
+				antiAfkConnection:Disconnect()
+				antiAfkConnection = nil
+			end
+		end
+	end
+})
+
+
 -- ðŸŸ¥ Then add the rest (GUI logic, etc.)
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -1336,7 +1364,7 @@ end)
 
 -- ðŸ”˜ Toggle to control the Leave GUI
 UtilsTab:CreateToggle({
-	Name = "Toggle Leave GUI",
+	Name = "🚪 Toggle Leave GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		leaveGui.Enabled = state
@@ -1376,7 +1404,7 @@ end)
 
 -- Add toggle to UtilsTab to show/hide the Rejoin GUI
 UtilsTab:CreateToggle({
-	Name = "Toggle Rejoin GUI",
+	Name = "⚡️ Toggle Rejoin GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		rejoinGui.Enabled = state
@@ -1515,13 +1543,14 @@ end)
 
 -- Rayfield toggle just shows/hides the custom GUI
 UtilsTab:CreateToggle({
-    Name = "Server Hop GUI",
+    Name = "🛜 Server Hop GUI",
     CurrentValue = false,
     Flag = "ServerHopGUIToggle",
     Callback = function(value)
         serverHopGui.Enabled = value
     end,
 })
+
 
 MainTab:CreateToggle({
 Name = "👻Show Invisible Players", 
