@@ -1968,6 +1968,167 @@ if localPlayer.Character then
     end
 end
 
+-- === SETUP ===
+local PetTab = Window:CreateTab("🐾 Pet", 6034818371)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local folder = Workspace:WaitForChild("RenderedMovingAnimals")
+
+-- Pet categories
+local secretPets = {
+    "Garama and Madundung", "La Grande Combinasion", "Graipuss Medussi",
+    "Los Tralaleritos", "Sammyni Spyderini", "La Vacca Saturno Saturnita",
+    "Torrtuginni Dragonfrutini", "Nuclearo Dinossauro", "Noobini Pizzanini"
+}
+local godPets = {
+    "Matteo", "Tralalero Tralala", "Espresso Signora",
+    "Odin Din Din Dun", "Statutino Libertino",
+    "Trenostruzzo Turbo 3000", "Ballerino Lololo", "Orcalero Orcala"
+}
+
+-- State tables
+local togglesEnabled = {}
+local pressingEForPet = {}
+local proximityResetting = false
+local character, humanoid, rootPart
+
+-- === FUNCTION DEFINITIONS ===
+
+-- Update character references in case of respawn
+local function refreshCharacter()
+    character = player.Character or player.CharacterAdded:Wait()
+    humanoid = character:WaitForChild("Humanoid")
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end
+
+-- Reset proximity holds instantly
+local function resetPrompts()
+    for _, v in ipairs(Workspace:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            v.HoldDuration = 0
+        end
+    end
+end
+
+-- Continuously reset prompts while any toggle is active
+local function startProximityLoop()
+    if proximityResetting then return end
+    proximityResetting = true
+    spawn(function()
+        while true do
+            local anyOn = false
+            for _, on in pairs(togglesEnabled) do
+                if on then anyOn = true break end
+            end
+            if not anyOn then break end
+            resetPrompts()
+            wait(1)
+        end
+        proximityResetting = false
+    end)
+end
+
+-- Simulates E key pressing for a pet
+local function startPressingE(pet)
+    if pressingEForPet[pet] then return end
+    pressingEForPet[pet] = true
+    spawn(function()
+        while pressingEForPet[pet] do
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            wait(0.4)
+        end
+    end)
+end
+
+local function stopPressingE(pet)
+    pressingEForPet[pet] = false
+end
+
+-- Returns closest model of given pet name
+local function findClosest(petName)
+    local bestModel, bestDist = nil, math.huge
+    for _, mdl in ipairs(folder:GetChildren()) do
+        if mdl:IsA("Model") and mdl.Name == petName then
+            local pp = mdl.PrimaryPart or mdl:FindFirstChildWhichIsA("BasePart")
+            if pp then
+                local d = (pp.Position - rootPart.Position).Magnitude
+                if d < bestDist then bestDist, bestModel = d, mdl end
+            end
+        end
+    end
+    return bestModel, bestDist
+end
+
+-- Handle movement and interaction per pet
+local function processPet(petName)
+    if not togglesEnabled[petName] then
+        stopPressingE(petName)
+        return
+    end
+
+    local mdl, dist = findClosest(petName)
+    if mdl then
+        local pos = mdl.PrimaryPart and mdl.PrimaryPart.Position or mdl:GetModelCFrame().p
+        if dist > 5 then
+            humanoid:MoveTo(pos)
+            stopPressingE(petName)
+        else
+            humanoid:MoveTo(rootPart.Position)
+            startPressingE(petName)
+        end
+    else
+        stopPressingE(petName)
+    end
+end
+
+-- === UI SETUP ===
+refreshCharacter()
+
+PetTab:CreateSection("🌟 Secret Pets")
+for _, pet in ipairs(secretPets) do
+    togglesEnabled[pet] = false
+    PetTab:CreateToggle({
+        Name = "🌟 " .. pet,
+        CurrentValue = false,
+        Callback = function(on)
+            togglesEnabled[pet] = on
+            if on then startProximityLoop() end
+            if not on then stopPressingE(pet) end
+        end
+    })
+end
+
+PetTab:CreateSection("🔥 Brainrot Gods")
+for _, pet in ipairs(godPets) do
+    togglesEnabled[pet] = false
+    PetTab:CreateToggle({
+        Name = "🔥 " .. pet,
+        CurrentValue = false,
+        Callback = function(on)
+            togglesEnabled[pet] = on
+            if on then startProximityLoop() end
+            if not on then stopPressingE(pet) end
+        end
+    })
+end
+
+-- === MAIN LOOP ===
+RunService.Heartbeat:Connect(function()
+    if not (character and humanoid and rootPart) or not humanoid.Health or humanoid.Health <= 0 then
+        refreshCharacter()
+        return
+    end
+
+    for petName in pairs(togglesEnabled) do
+        processPet(petName)
+    end
+end)
+
 
 local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
