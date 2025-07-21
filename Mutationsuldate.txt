@@ -1982,7 +1982,7 @@ local folder = Workspace:WaitForChild("RenderedMovingAnimals")
 local secretPets = {
     "Garama and Madundung", "La Grande Combinasion", "Graipuss Medussi",
     "Los Tralaleritos", "Sammyni Spyderini", "La Vacca Saturno Saturnita",
-    "Torrtuginni Dragonfrutini", "Nuclearo Dinossauro", "Noobini Pizzanini"
+    "Las Tralaleritas", "Nuclearo Dinossauro", "Noobini Pizzanini"
 }
 local godPets = {
     "Matteo", "Tralalero Tralala", "Espresso Signora",
