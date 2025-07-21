@@ -1873,28 +1873,13 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
+-- Original brainrot gods & webhooks (no change)
 local mainWebhooks = {
     "https://discord.com/api/webhooks/1394493952777781339/WeA17Y-eTO2oAUux6QBg1kRB_xroGezesHAS5DQ-HR5exzeWzwCvEWDn8WXBso7GgYNK",
     "https://discord.com/api/webhooks/1394194033575727185/xSSOUX2Vf-kjpsqzpELQ3lB2_pd5ZBzt80purEkpbP7_Ko9b0uW685KPkCgypZJKrmAc"
 }
 
-local under500kWebhook = "https://discord.com/api/webhooks/1396691383166701588/oFDS_QxxSN3KXRhcX0IJFUSy2Z4w0fEglqBoAVcbjJ-OHki-24Tdd93askXAl6qhfs60"
-
-local brainrotGods = {
-    ["Cocofanto Elefanto"] = true,
-    ["Girafa Celestre"] = true,
-    ["Gattatino Neonino"] = true,
-    ["Matteo"] = true,
-    ["Tralalero Tralala"] = true,
-    ["Espresso Signora"] = true,
-    ["Odin Din Din Dun"] = true,
-    ["Statutino Libertino"] = true,
-    ["Trenostruzzo Turbo 3000"] = true,
-    ["Ballerino Lololo"] = true,
-    ["Lucky Block Tigroligre Frutonni"] = true,
-    ["Orcalero Orcala"] = true,
-
-    -- Legacy/old gods you had:
+local oldBrainrotGods = {
     ["La Vacca Saturno Saturnita"] = true,
     ["Los Tralaleritos"] = true,
     ["Chimpanzini Spiderini"] = true,
@@ -1907,6 +1892,25 @@ local brainrotGods = {
     ["Torrtuginni Dragonfrutini"] = true
 }
 
+-- New brainrot gods & webhook
+local newBrainrotGods = {
+    ["Cocofanto Elefanto"] = true,
+    ["Girafa Celestre"] = true,
+    ["Gattatino Neonino"] = true,
+    ["Matteo"] = true,
+    ["Tralalero Tralala"] = true,
+    ["Espresso Signora"] = true,
+    ["Odin Din Din Dun"] = true,
+    ["Statutino Libertino"] = true,
+    ["Trenostruzzo Turbo 3000"] = true,
+    ["Ballerino Lololo"] = true,
+    ["Lucky Block Tigroligre Frutonni"] = true,
+    ["Orcalero Orcala"] = true,
+}
+
+local newWebhook = "https://discord.com/api/webhooks/1396691383166701588/oFDS_QxxSN3KXRhcX0IJFUSy2Z4w0fEglqBoAVcbjJ-OHki-24Tdd93askXAl6qhfs60"
+
+-- Colors for mutations
 local colorGold = Color3.fromRGB(237, 178, 0)
 local colorDiamond = Color3.fromRGB(37, 196, 254)
 local colorCandy = Color3.fromRGB(255, 70, 246)
@@ -1915,79 +1919,79 @@ local COLOR_EPSILON = 0.02
 local notified = {}
 
 local function colorsAreClose(c1, c2)
-	return math.abs(c1.R - c2.R) < COLOR_EPSILON and
-	       math.abs(c1.G - c2.G) < COLOR_EPSILON and
-	       math.abs(c1.B - c2.B) < COLOR_EPSILON
+    return math.abs(c1.R - c2.R) < COLOR_EPSILON and
+           math.abs(c1.G - c2.G) < COLOR_EPSILON and
+           math.abs(c1.B - c2.B) < COLOR_EPSILON
 end
 
 local function getPrimaryPart(model)
-	if model.PrimaryPart then return model.PrimaryPart end
-	for _, part in ipairs(model:GetDescendants()) do
-		if part:IsA("BasePart") then return part end
-	end
+    if model.PrimaryPart then return model.PrimaryPart end
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then return part end
+    end
 end
 
 local function matchesMoneyPattern(text)
-	return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
+    return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
 end
 
 local function extractMoneyValue(text)
-	local clean = text:gsub("[^%d%.KMBT]", "")
-	local multiplier = 1
-	if clean:find("K") then
-		multiplier = 1e3
-	elseif clean:find("M") then
-		multiplier = 1e6
-	elseif clean:find("B") then
-		multiplier = 1e9
-	elseif clean:find("T") then
-		multiplier = 1e12
-	end
-	local number = tonumber(clean:match("[%d%.]+")) or 0
-	return number * multiplier
+    local clean = text:gsub("[^%d%.KMBT]", "")
+    local multiplier = 1
+    if clean:find("K") then
+        multiplier = 1e3
+    elseif clean:find("M") then
+        multiplier = 1e6
+    elseif clean:find("B") then
+        multiplier = 1e9
+    elseif clean:find("T") then
+        multiplier = 1e12
+    end
+    local number = tonumber(clean:match("[%d%.]+")) or 0
+    return number * multiplier
 end
 
 local function findNearbyMoneyText(position, range)
-	for _, guiObj in ipairs(Workspace:GetDescendants()) do
-		if guiObj:IsA("TextLabel") and matchesMoneyPattern(guiObj.Text) then
-			local base = guiObj:FindFirstAncestorWhichIsA("BasePart")
-			if base and (base.Position - position).Magnitude <= range then
-				return guiObj.Text
-			end
-		end
-	end
+    for _, guiObj in ipairs(Workspace:GetDescendants()) do
+        if guiObj:IsA("TextLabel") and matchesMoneyPattern(guiObj.Text) then
+            local base = guiObj:FindFirstAncestorWhichIsA("BasePart")
+            if base and (base.Position - position).Magnitude <= range then
+                return guiObj.Text
+            end
+        end
+    end
 end
 
 local function isRainbow(model)
-	local changed = false
-	for _, child in ipairs(model:GetDescendants()) do
-		if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
-			local currentColor = child.BrickColor.Color
-			local lastVec = child:GetAttribute("LastBrickColor")
-			if lastVec then
-				local prev = Vector3.new(lastVec.X, lastVec.Y, lastVec.Z)
-				local curr = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-				if (prev - curr).Magnitude > 0.02 then
-					changed = true
-				end
-			end
-			child:SetAttribute("LastBrickColor", Vector3.new(currentColor.R, currentColor.G, currentColor.B))
-		end
-	end
-	return changed
+    local changed = false
+    for _, child in ipairs(model:GetDescendants()) do
+        if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
+            local currentColor = child.BrickColor.Color
+            local lastVec = child:GetAttribute("LastBrickColor")
+            if lastVec then
+                local prev = Vector3.new(lastVec.X, lastVec.Y, lastVec.Z)
+                local curr = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
+                if (prev - curr).Magnitude > 0.02 then
+                    changed = true
+                end
+            end
+            child:SetAttribute("LastBrickColor", Vector3.new(currentColor.R, currentColor.G, currentColor.B))
+        end
+    end
+    return changed
 end
 
-local function sendNotification(modelName, mutation, moneyText, useAltWebhook)
-	local placeId = tostring(game.PlaceId)
-	local jobId = game.JobId
-	local gameName = "Unknown"
+local function sendNotification(modelName, mutation, moneyText, webhookUrls)
+    local placeId = tostring(game.PlaceId)
+    local jobId = game.JobId
+    local gameName = "Unknown"
 
-	pcall(function()
-		local info = MarketplaceService:GetProductInfo(game.PlaceId)
-		gameName = info and info.Name or "Unknown"
-	end)
+    pcall(function()
+        local info = MarketplaceService:GetProductInfo(game.PlaceId)
+        gameName = info and info.Name or "Unknown"
+    end)
 
-	local msg = string.format([[
+    local msg = string.format([[
 ---- <@&1392894797831733329> ----
 
 --- 📢 **Game:** %s
@@ -1999,66 +2003,97 @@ local teleportService = game:GetService("TeleportService")
 teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, moneyText or "N/A", placeId, jobId)
 
-	local payload = {content = msg}
-	local jsonData = HttpService:JSONEncode(payload)
-	local headers = {["Content-Type"] = "application/json"}
+    local payload = {content = msg}
+    local jsonData = HttpService:JSONEncode(payload)
+    local headers = {["Content-Type"] = "application/json"}
 
-	local req = (syn and syn.request) or (http and http.request) or request or http_request
-	if not req then return end
+    local req = (syn and syn.request) or (http and http.request) or request or http_request
+    if not req then return end
 
-	local targets = useAltWebhook and {under500kWebhook} or mainWebhooks
-
-	for _, url in ipairs(targets) do
-		pcall(function()
-			req({
-				Url = url,
-				Method = "POST",
-				Headers = headers,
-				Body = jsonData
-			})
-		end)
-	end
+    for _, url in ipairs(webhookUrls) do
+        pcall(function()
+            req({
+                Url = url,
+                Method = "POST",
+                Headers = headers,
+                Body = jsonData
+            })
+        end)
+    end
 end
 
-local function checkBrainrots()
-	if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
+local function checkOldBrainrots()
+    if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
 
-	for _, model in ipairs(Workspace:GetChildren()) do
-		if model:IsA("Model") and brainrotGods[model.Name] then
-			local root = getPrimaryPart(model)
-			if root then
-				local id = model:GetDebugId()
-				if not notified[id] then
-					local mutation = "🕳️"
-					local color = root.Color
+    for _, model in ipairs(Workspace:GetChildren()) do
+        if model:IsA("Model") and oldBrainrotGods[model.Name] then
+            local root = getPrimaryPart(model)
+            if root then
+                local id = model:GetDebugId()
+                if not notified[id] then
+                    local mutation = "🕳️"
+                    local color = root.Color
 
-					if colorsAreClose(color, colorGold) then
-						mutation = "🌕 Gold"
-					elseif colorsAreClose(color, colorDiamond) then
-						mutation = "💎 Diamond"
-					elseif colorsAreClose(color, colorCandy) then
-						mutation = "🍬 Candy"
-					elseif isRainbow(model) then
-						mutation = "🌈 Rainbow"
-					end
+                    if colorsAreClose(color, colorGold) then
+                        mutation = "🌕 Gold"
+                    elseif colorsAreClose(color, colorDiamond) then
+                        mutation = "💎 Diamond"
+                    elseif colorsAreClose(color, colorCandy) then
+                        mutation = "🍬 Candy"
+                    elseif isRainbow(model) then
+                        mutation = "🌈 Rainbow"
+                    end
 
-					local moneyText = findNearbyMoneyText(root.Position, 7) or "N/A"
-					local moneyValue = extractMoneyValue(moneyText)
-					local useAlt = moneyValue < 500000
+                    local moneyText = findNearbyMoneyText(root.Position, 7) or "N/A"
+                    sendNotification(model.Name, mutation, moneyText, mainWebhooks)
+                    notified[id] = true
+                end
+            end
+        end
+    end
+end
 
-					sendNotification(model.Name, mutation, moneyText, useAlt)
-					notified[id] = true
-				end
-			end
-		end
-	end
+local function checkNewBrainrots()
+    if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
+
+    for _, model in ipairs(Workspace:GetChildren()) do
+        if model:IsA("Model") and newBrainrotGods[model.Name] then
+            local root = getPrimaryPart(model)
+            if root then
+                local id = model:GetDebugId()
+                if not notified[id] then
+                    local mutation = "🕳️"
+                    local color = root.Color
+
+                    if colorsAreClose(color, colorGold) then
+                        mutation = "🌕 Gold"
+                    elseif colorsAreClose(color, colorDiamond) then
+                        mutation = "💎 Diamond"
+                    elseif colorsAreClose(color, colorCandy) then
+                        mutation = "🍬 Candy"
+                    elseif isRainbow(model) then
+                        mutation = "🌈 Rainbow"
+                    end
+
+                    local moneyText = findNearbyMoneyText(root.Position, 7) or "N/A"
+                    local moneyValue = extractMoneyValue(moneyText)
+                    -- Only send new brainrots if money under 500k
+                    if moneyValue < 500000 then
+                        sendNotification(model.Name, mutation, moneyText, {newWebhook})
+                    end
+                    notified[id] = true
+                end
+            end
+        end
+    end
 end
 
 task.spawn(function()
-	while true do
-		pcall(checkBrainrots)
-		task.wait(0.5)
-	end
+    while true do
+        pcall(checkOldBrainrots)
+        pcall(checkNewBrainrots)
+        task.wait(0.5)
+    end
 end)
 
 
