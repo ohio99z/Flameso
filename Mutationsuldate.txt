@@ -125,8 +125,72 @@ task.defer(function()
         fadeOut()
     end)
 
-    task.delay(16, fadeOut)
+    task.delay(10, fadeOut)
 end)
+
+-- GUI with Draggable Circular ImageButton to simulate pressing K key
+local ScreenGui = Instance.new("ScreenGui")
+local KButton = Instance.new("ImageButton")
+
+-- Parent GUI to CoreGui (requires exploit environment like Synapse)
+ScreenGui.Name = "KKeyGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
+
+-- Configure circular image button (11% smaller than 78 → ~69px)
+KButton.Parent = ScreenGui
+KButton.Size = UDim2.new(0, 69, 0, 69)
+KButton.Position = UDim2.new(0, 40, 0.4, -34)
+KButton.BackgroundTransparency = 1
+KButton.Image = "rbxassetid://139349233430103"
+KButton.ScaleType = Enum.ScaleType.Fit
+KButton.ClipsDescendants = true
+
+-- Make it circular
+local corner = Instance.new("UICorner", KButton)
+corner.CornerRadius = UDim.new(1, 0)
+
+-- Draggable (supports both Mouse & Touch)
+local dragging = false
+local dragStart, startPos
+
+local function inputPosition(input)
+	return input.Position or input.TouchPosition or Vector2.zero
+end
+
+KButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = inputPosition(input)
+		startPos = KButton.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = inputPosition(input) - dragStart
+		KButton.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- Simulate pressing the K key
+KButton.MouseButton1Click:Connect(function()
+	local vim = game:GetService("VirtualInputManager")
+	vim:SendKeyEvent(true, Enum.KeyCode.K, false, game)  -- Key down
+	vim:SendKeyEvent(false, Enum.KeyCode.K, false, game) -- Key up
+end)
+
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
