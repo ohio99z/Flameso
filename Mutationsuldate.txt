@@ -2013,7 +2013,7 @@ local function sendEmbed(modelName, moneyText, playersCount, webhook)
                 {name = "📜 Join Script (PC)", value = "game:GetService(\"TeleportService\"):TeleportToPlaceInstance(" .. game.PlaceId .. ", \"" .. jobId .. "\", game.Players.LocalPlayer)", inline = false}
             },
             footer = {
-                text = "Made by Chilli Hub | " .. os.date("%I:%M %p")
+                text = "Made by Ken Hub | " .. os.date("%I:%M %p")
             }
         }}
     }
