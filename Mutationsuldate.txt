@@ -927,7 +927,7 @@ MainTab:CreateButton({
 
 -- Add the toggle in MainTab
 MainTab:CreateToggle({
-Name = "👋Auto Hit",
+Name = "👋Auto Hit Nearby",
 CurrentValue = false,
 Flag = "AutoActivateTools",
 Callback = function(value)
