@@ -494,7 +494,7 @@ end)
 
 -- 💢 Rayfield Toggle for Less Knock Back
 MainTab:CreateToggle({
-	Name = "💢 No Knock Back",
+	Name = "💢 Anti Ragdoll",
 	CurrentValue = false,
 	Callback = function(enabled)
 		setHeaviness(enabled)
