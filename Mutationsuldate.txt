@@ -1868,18 +1868,15 @@ end
 local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
-local MarketplaceService = game:GetService("MarketplaceService")
+local TeleportService = game:GetService("TeleportService")
 
--- Required Place ID
 if game.PlaceId ~= 109983668079237 then return end
 
--- Webhooks
 local webhooks = {
     old = "https://discord.com/api/webhooks/1394493952777781339/WeA17Y-eTO2oAUux6QBg1kRB_xroGezesHAS5DQ-HR5exzeWzwCvEWDn8WXBso7GgYNK",
     new = "https://discord.com/api/webhooks/1396691383166701588/oFDS_QxxSN3KXRhcX0IJFUSy2Z4w0fEglqBoAVcbjJ-OHki-24Tdd93askXAl6qhfs60"
 }
 
--- Brainrot Gods
 local oldGods = {
     ["La Vacca Saturno Saturnita"] = true,
     ["Los Tralaleritos"] = true,
@@ -1908,13 +1905,11 @@ local newGods = {
     ["Orcalero Orcala"] = true
 }
 
--- Mutations / Color Codes
 local GOLD = Color3.fromRGB(237, 178, 0)
 local DIAMOND = Color3.fromRGB(37, 196, 254)
 local CANDY = Color3.fromRGB(255, 70, 246)
 local COLOR_TOLERANCE = 0.03
 
--- Raycast & Status
 local notified = {}
 
 local function areColorsClose(c1, c2)
@@ -1948,7 +1943,6 @@ local function detectVisibleMoney(position, radius)
             if part then
                 local dist = (part.Position - position).Magnitude
                 if dist <= minDist then
-                    -- Raycast check
                     local result = Workspace:Raycast(position, (part.Position - position), RaycastParams.new())
                     if not result or result.Instance == part then
                         closest, minDist = obj.Text, dist
@@ -1961,26 +1955,30 @@ local function detectVisibleMoney(position, radius)
 end
 
 local function getMutation(model)
-    local foundGold, foundDiamond, foundCandy, rainbow = false, false, false, false
-    local lastColor = nil
+    local foundGold, foundDiamond, foundCandy = false, false, false
+    local uniqueColors = {}
 
     for _, part in ipairs(model:GetDescendants()) do
         if part:IsA("BasePart") then
             local c = part.Color
-            if areColorsClose(c, GOLD) then foundGold = true
-            elseif areColorsClose(c, DIAMOND) then foundDiamond = true
-            elseif areColorsClose(c, CANDY) then foundCandy = true end
+            if areColorsClose(c, GOLD) then foundGold = true end
+            if areColorsClose(c, DIAMOND) then foundDiamond = true end
+            if areColorsClose(c, CANDY) then foundCandy = true end
 
-            if lastColor then
-                if (Vector3.new(c.R, c.G, c.B) - Vector3.new(lastColor.R, lastColor.G, lastColor.B)).Magnitude > 0.05 then
-                    rainbow = true
+            local alreadyExists = false
+            for _, uc in ipairs(uniqueColors) do
+                if areColorsClose(uc, c) then
+                    alreadyExists = true
+                    break
                 end
             end
-            lastColor = c
+            if not alreadyExists then
+                table.insert(uniqueColors, c)
+            end
         end
     end
 
-    if rainbow then return "🌈 Rainbow" end
+    if #uniqueColors > 2 then return "🌈 Rainbow" end
     if foundCandy then return "🍬 Candy" end
     if foundDiamond then return "💎 Diamond" end
     if foundGold then return "🟨 Gold" end
@@ -2043,10 +2041,10 @@ local function handleModel(model, isNew)
     notified[id] = true
 end
 
--- Loop
 task.spawn(function()
     while true do
-        if #Players:GetPlayers() >= 3 and #Players:GetPlayers() <= 8 then
+        local count = #Players:GetPlayers()
+        if count >= 3 and count <= 8 then
             for _, model in ipairs(Workspace:GetChildren()) do
                 if model:IsA("Model") then
                     pcall(function() handleModel(model, false) end)
@@ -2056,6 +2054,25 @@ task.spawn(function()
         end
         task.wait(0.5)
     end
+end)
+
+-- Auto-create join script with correct JobId
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Once(function()
+        local joinScript = Instance.new("LocalScript")
+        joinScript.Name = "AutoJoin"
+        joinScript.Source = [[
+            local TeleportService = game:GetService("TeleportService")
+            local Players = game:GetService("Players")
+            local placeId = ]] .. game.PlaceId .. [[
+            local jobId = "]] .. game.JobId .. [["
+
+            -- Uncomment to auto-join on spawn:
+            -- TeleportService:TeleportToPlaceInstance(placeId, jobId, Players.LocalPlayer)
+            print("Use this jobId to join:", jobId)
+        ]]
+        joinScript.Parent = player:WaitForChild("PlayerScripts")
+    end)
 end)
 
 
