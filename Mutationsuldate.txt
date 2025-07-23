@@ -2259,7 +2259,7 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
                     local offsetPosition = root.Position + Vector3.new(0, 2, 0)
-                    local money = findNearbyMoneyText(offsetPosition, 4) or "N/A"
+                    local money = findNearbyMoneyText(offsetPosition, 7) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
