@@ -2279,7 +2279,7 @@ end
 
 local function checkBrainrots()
 local players = Players:GetPlayers()
-if #players < 4 or #players > 8 then return end
+if #players < 4 or #players > 7 then return end
 
 for _, model in ipairs(Workspace:GetChildren()) do  
     if model:IsA("Model") and brainrotGods[model.Name] then  
