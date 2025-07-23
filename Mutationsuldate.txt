@@ -2194,7 +2194,7 @@ local function isRainbow(model)
             if lastVec then
                 local prev = Vector3.new(lastVec.X, lastVec.Y, lastVec.Z)
                 local curr = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                if (prev - curr).Magnitude > 0.02 then
+                if (prev - curr).Magnitude > 0.5 then
                     changed = true
                 end
             end
@@ -2240,7 +2240,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     end
 end
 local function checkBrainrots()
-    if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
+    if #Players:GetPlayers() < 4 or #Players:GetPlayers() > 8 then return end
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
@@ -2259,7 +2259,7 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
                     local offsetPosition = root.Position + Vector3.new(0, 2, 0)
-                    local money = findNearbyMoneyText(offsetPosition, 5) or "N/A"
+                    local money = findNearbyMoneyText(offsetPosition, 4) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
