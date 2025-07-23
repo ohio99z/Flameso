@@ -2234,90 +2234,88 @@ local function sendNotification(modelName, mutation, moneyText)
     end)
 
     local msg = string.format([[
-**Brainrot Notify | Lemon Hub**
+Brainrot Notify | Ken Hub
 
-🏷️ **Name**
+🏷️ Name
 %s
 
-💰 **Money per sec**
+💰 Money per sec
 %s
 
-👥 **Players**
+👥 Players
 %d/8
 
-🌐 **Join Link**
-[Click to Join Server](https://www.roblox.com/games/%s)
-
-🆔 **Job ID (Mobile)**
+🆔 Job ID (Mobile)
 %s
 
-🆔 **Job ID (PC)**
+🆔 Job ID (PC)
 %s
 
-🧵 **Join Script**
-```lua
+📜 Join Script (Mobile)
 game:GetService("TeleportService"):TeleportToPlaceInstance(%s, "%s", game.Players.LocalPlayer)
-Made by Lemon Hub | %s
-]], modelName, moneyText or "N/A", playerCount, placeId, jobId, jobId, placeId, jobId, os.date("Today at %I:%M %p"))
 
-if not placeId or not jobId or msg:find("@everyone") or msg:find("@here") then return end
+📜 Join Script (PC)
+game:GetService("TeleportService"):TeleportToPlaceInstance(%s, "%s", game.Players.LocalPlayer)
 
-local payload = {content = msg}
-local jsonData = HttpService:JSONEncode(payload)
-local headers = {["Content-Type"] = "application/json"}
-local req = (syn and syn.request) or (http and http.request) or request or http_request
-if not req then return end
+Made by Ken Hub | Today at %s
+]], modelName, moneyText or "N/A", playerCount, jobId, jobId, placeId, jobId, placeId, jobId, os.date("%I:%M %p"))
 
-for _, url in ipairs(webhookUrls) do
-    pcall(function()
-        req({
-            Url = url,
-            Method = "POST",
-            Headers = headers,
-            Body = jsonData
-        })
-    end)
-end
+    local payload = {content = msg}
+    local jsonData = HttpService:JSONEncode(payload)
+    local headers = {["Content-Type"] = "application/json"}
+    local req = (syn and syn.request) or (http and http.request) or request or http_request
+    if not req then return end
+
+    for _, url in ipairs(webhookUrls) do
+        pcall(function()
+            req({
+                Url = url,
+                Method = "POST",
+                Headers = headers,
+                Body = jsonData
+            })
+        end)
+    end
 end
 
 local function checkBrainrots()
-local players = Players:GetPlayers()
-if #players < 4 or #players > 7 then return end
+    local players = Players:GetPlayers()
+    if #players < 4 or #players > 7 then return end
 
-for _, model in ipairs(Workspace:GetChildren()) do
-    if model:IsA("Model") and brainrotGods[model.Name] then
-        local root = getPrimaryPart(model)
-        if root then
-            local id = model:GetDebugId()
-            if not notified[id] then
-                local mutation = "🕳️"
-                local color = root.Color
+    for _, model in ipairs(Workspace:GetChildren()) do
+        if model:IsA("Model") and brainrotGods[model.Name] then
+            local root = getPrimaryPart(model)
+            if root then
+                local id = model:GetDebugId()
+                if not notified[id] then
+                    local mutation = "🕳️"
+                    local color = root.Color
 
-                if colorsAreClose(color, colorGold) then
-                    mutation = "🌕 Gold"
-                elseif colorsAreClose(color, colorDiamond) then
-                    mutation = "💎 Diamond"
-                elseif colorsAreClose(color, colorCandy) then
-                    mutation = "🍬 Candy"
-                elseif isRainbowMutating(model) then
-                    mutation = "🌈 Rainbow"
+                    if colorsAreClose(color, colorGold) then
+                        mutation = "🌕 Gold"
+                    elseif colorsAreClose(color, colorDiamond) then
+                        mutation = "💎 Diamond"
+                    elseif colorsAreClose(color, colorCandy) then
+                        mutation = "🍬 Candy"
+                    elseif isRainbowMutating(model) then
+                        mutation = "🌈 Rainbow"
+                    end
+
+                    local offset = root.Position + Vector3.new(0, 2, 0)
+                    local money = findNearbyMoneyText(offset, 6) or "N/A"
+
+                    sendNotification(model.Name, mutation, money)
+                    notified[id] = true
                 end
-
-                local offset = root.Position + Vector3.new(0, 2, 0)
-                local money = findNearbyMoneyText(offset, 6) or "N/A"
-
-                sendNotification(model.Name, mutation, money)
-                notified[id] = true
             end
         end
     end
 end
-end
 
 task.spawn(function()
-while true do
-pcall(checkBrainrots)
-task.wait(0.5)
-end
+    while true do
+        pcall(checkBrainrots)
+        task.wait(0.5)
+    end
 end)
 
