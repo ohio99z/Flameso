@@ -2134,7 +2134,7 @@ RunService.Heartbeat:Connect(function()
 end)
 
 
-local HttpService = game:GetService("HttpService")
+game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -2159,6 +2159,7 @@ local brainrotGods = {
 local colorGold = Color3.fromRGB(237, 178, 0)
 local colorDiamond = Color3.fromRGB(37, 196, 254)
 local colorCandy = Color3.fromRGB(255, 70, 246)
+local colorRainbow = Color3.fromRGB(255, 0, 255) -- Replace this with the actual rainbow root color
 local COLOR_EPSILON = 0.02
 local notified = {}
 local function colorsAreClose(c1, c2)
@@ -2185,24 +2186,6 @@ local function findNearbyMoneyText(position, range)
         end
     end
 end
-local function isRainbow(model)
-    local changed = false
-    for _, child in ipairs(model:GetDescendants()) do
-        if child:IsA("MeshPart") and child.Name:sub(1, 5) == "Cube." then
-            local currentColor = child.BrickColor.Color
-            local lastVec = child:GetAttribute("LastBrickColor")
-            if lastVec then
-                local prev = Vector3.new(lastVec.X, lastVec.Y, lastVec.Z)
-                local curr = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                if (prev - curr).Magnitude > 0.5 then
-                    changed = true
-                end
-            end
-            child:SetAttribute("LastBrickColor", Vector3.new(currentColor.R, currentColor.G, currentColor.B))
-        end
-    end
-    return changed
-end
 local function sendNotification(modelName, mutation, moneyText)
     local placeId = tostring(game.PlaceId)
     local jobId = game.JobId
@@ -2213,8 +2196,11 @@ local function sendNotification(modelName, mutation, moneyText)
     end)
     local msg = string.format([[
 ---- <@&1392894797831733329> ----
+
 --- 📢 **Game:** %s
+
 --- 💡 Model Name: "%s" | Mutation: %s
+
 --- 💵 Money/s: %s
 local player = game.Players:GetPlayers()[1]
 local teleportService = game:GetService("TeleportService")
@@ -2240,7 +2226,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     end
 end
 local function checkBrainrots()
-    if #Players:GetPlayers() < 4 or #Players:GetPlayers() > 8 then return end
+    if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
@@ -2255,11 +2241,11 @@ local function checkBrainrots()
                         mutation = "💎 Diamond"
                     elseif colorsAreClose(color, colorCandy) then
                         mutation = "🍬 Candy"
-                    elseif isRainbow(model) then
+                    elseif colorsAreClose(color, colorRainbow) then
                         mutation = "🌈 Rainbow"
                     end
                     local offsetPosition = root.Position + Vector3.new(0, 2, 0)
-                    local money = findNearbyMoneyText(offsetPosition, 7) or "N/A"
+                    local money = findNearbyMoneyText(offsetPosition, 5.5) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
