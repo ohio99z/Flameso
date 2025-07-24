@@ -2148,16 +2148,33 @@ local webhookUrls = {
 }
 
 local brainrotGods = {
-    ["La Vacca Saturno Saturnita"] = true,
-    ["Los Tralaleritos"] = true,
-    ["Chimpanzini Spiderini"] = true,
-    ["Graipuss Medussi"] = true,
-    ["La Grande Combinasion"] = true,
     ["Garama and Madundung"] = true,
+    ["Nuclearo Dinossauro"] = true,
+    ["La Grande Combinasion"] = true,
     ["Secret Lucky Block"] = true,
     ["Pot Hotspot"] = true,
+    ["Graipuss Medussi"] = true,
+    ["Los Tralaleritos"] = true,
     ["Las Tralaleritas"] = true,
     ["Torrtuginni Dragonfrutini"] = true,
+    ["Chimpanzini Spiderini"] = true,
+    ["Sammyini Spidreini"] = true,
+    ["La Vacca Saturno Saturnita"] = true,
+}
+
+local brainrotRanks = {
+    ["Garama and Madundung"]         = 1,
+    ["Nuclearo Dinossauro"]          = 2,
+    ["La Grande Combinasion"]        = 3,
+    ["Secret Lucky Block"]           = 4,
+    ["Pot Hotspot"]                  = 5,
+    ["Graipuss Medussi"]             = 6,
+    ["Los Tralaleritos"]             = 7,
+    ["Las Tralaleritas"]             = 8,
+    ["Torrtuginni Dragonfrutini"]    = 9,
+    ["Chimpanzini Spiderini"]        = 10,
+    ["Sammyini Spidreini"]           = 11,
+    ["La Vacca Saturno Saturnita"]   = 12
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2219,7 +2236,6 @@ local function getPlayerCount()
 end
 
 local function sendNotification(modelName, mutation, moneyText)
-    -- Private-server / unjoinable checks
     if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
     if not game.JobId or game.JobId == "" or game.JobId:lower():find("priv") then return end
 
@@ -2257,11 +2273,8 @@ local teleportService = game:GetService("TeleportService")
 teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
 
-    -- Block bad mentions
     if msg:find("@everyone") or msg:find("@here") then return end
-    -- Strict header-format check
     if not msg:find("^---- <@&1392894797831733329> ----\n\n--- 📢 %*%*Game:%*%*") then return end
-    -- Prevent duplicates
     if msg == lastSentMessage then return end
     lastSentMessage = msg
 
@@ -2287,31 +2300,43 @@ local function checkBrainrots()
     local players = Players:GetPlayers()
     if #players < 4 or #players > 7 then return end
 
+    local bestModel = nil
+    local bestRank = math.huge
+
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
             if root then
                 local id = model:GetDebugId()
                 if not notified[id] then
-                    local mutation = "🕳️"
-                    local color    = root.Color
-
-                    if colorsAreClose(color, colorGold) then
-                        mutation = "🌕 Gold"
-                    elseif colorsAreClose(color, colorDiamond) then
-                        mutation = "💎 Diamond"
-                    elseif colorsAreClose(color, colorCandy) then
-                        mutation = "🍬 Candy"
-                    elseif isRainbowMutating(model) then
-                        mutation = "🌈 Rainbow"
+                    local rank = brainrotRanks[model.Name] or 9999
+                    if rank < bestRank then
+                        bestModel = model
+                        bestRank = rank
                     end
-
-                    local money = findNearbyMoneyText(root.Position + Vector3.new(0,2,0), 6) or "N/A"
-                    sendNotification(model.Name, mutation, money)
-                    notified[id] = true
                 end
             end
         end
+    end
+
+    if bestModel then
+        local root = getPrimaryPart(bestModel)
+        local color = root.Color
+        local mutation = "🕳️"
+
+        if colorsAreClose(color, colorGold) then
+            mutation = "🌕 Gold"
+        elseif colorsAreClose(color, colorDiamond) then
+            mutation = "💎 Diamond"
+        elseif colorsAreClose(color, colorCandy) then
+            mutation = "🍬 Candy"
+        elseif isRainbowMutating(bestModel) then
+            mutation = "🌈 Rainbow"
+        end
+
+        local money = findNearbyMoneyText(root.Position + Vector3.new(0,2,0), 6) or "N/A"
+        sendNotification(bestModel.Name, mutation, money)
+        notified[bestModel:GetDebugId()] = true
     end
 end
 
