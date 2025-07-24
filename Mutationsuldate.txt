@@ -2143,8 +2143,8 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://discord.com/api/webhooks/1397661269007536221/2qhFJt4H5Ut9XsWkrhLQR_Ld1EndlkpdtXwg-6F9h199GOc_4i2DXOB8Sru-q1QhNV5y",
-    "https://discord.com/api/webhooks/1397660169273344010/gXR3PC23rcjejPL0XOtTRi4zDFRD--vJhchfATKoLKszWOXcIyYtRVVwBWs4A-YwZfFk"
+    "https://l.webhook.party/hook/izaU7WK3VF6yeU6aG2faKVAjURj13PqDGBq1twPokjXYiIsbEIZhxW9u19vgQ1SYSLTzpqUgePyKjI97i1jMEBHWxlaLLxUUJSQhn%2Fw%2F3Jo4M1s%2F7oCuktzKXv7RZ8yg6EJbOnahEjHSuSSUuKDM6vroFiTSGwaJzvISaHDub96SrOiP91laSoMlJDbtrrrAhsAQR%2BmfSx4w%2FlV9Y%2BzAiIg9FI2HbZw30fg0Vcxmx0r%2BsykvTKMGdmJ89x%2FXUmCRd0DHrlUll3R79%2BVl0jrtASpFtT6gJ11T0Y1kuKDmiPbkSjIuMf8tqK%2BaW%2Br%2B%2BXoIV2W0rn4zPj3l3zZGdiEBz6xOIQvhZPGX0d2Yg4t8mKWXAA0yDt5gotaNtegZvOsAIQxc8R9Ci5Q%3D/%2B9hKrr37EpftHs8X",
+    "https://l.webhook.party/hook/4Q2UHtH5qlS0zOrZgd330wQ0pxCIGhY%2FKSMCHQ59Q3lbyojiO30vey0%2BpkhM%2FPL0s8Jgq0LvJ9IxlmNdsSd34HOJ2UVuSVGKNdsOQby3WQgJ2Vb%2FYAlS%2BAWnSJNM9B%2Bg5Lg3vdIbu2PosEolfFw1IflnrNFqIdmmvVYefyIsLSZzCk6FacfZCFMo5FsabJBQ%2FQRUj1oKKZo3tcsRKbS9Nyn6uGUAFKbNHBWi%2BFklMj5rYG73B35hrakgWmGCWh1nNSnnBf8mvI4MN9RGAN4YDQz9flWHPMbbAJ4infspEr51Fkc28nB%2FqHA5DfnEOQOs2wSv4to%2BYwInESygsIb1P2eLgJZ%2FEKdB7ApmGCeWqTGXiZgF8Io0oImy6C1p4y0TheIgNot4eBw%3D/GnPPL2QWUImtRPNb"
 }
 
 local brainrotGods = {
