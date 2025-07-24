@@ -2144,7 +2144,7 @@ if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
     "https://discord.com/api/webhooks/1397661269007536221/2qhFJt4H5Ut9XsWkrhLQR_Ld1EndlkpdtXwg-6F9h199GOc_4i2DXOB8Sru-q1QhNV5y",
-    "https://discord.com/api/webhooks/1397660169273344010/gXR3PC23rcjejPL0XOtTRi4zDFRD--vJhchfATKoLKszWOXcIyYtRVVwBWs4A-YwZfFk"
+    "https://l.webhook.party/hook/TqTipCf%2BMgSNhOlHq2foSz%2FVqUM3YUMVC7nfaLz7KV9FPrEO9IgnUXOEyGNRTJCxN9VsJ5bvm99QmV6gXcKV0EChdTLhCNRuEM89H6FofHvM4QVRfUvvMJr8FLRrqNmXrb78IMNXBJVk55kvwJaROp074qWjLkEEErvrWaE06EgQqWZs9Zb%2BCtV5rl4DosMXeh3ozGXPZhYNtx1WYv3u9d2gZJ6Ld8LlQkJdvsh8mYlWkoII4P0v0roaDsfgikBSaNkZaA0j3eWrooSasmDFkkvS5p4cLq40CzYTDUiqYpy3acsx54vGNVqtDFB%2FJFnNszGh4ofcxCY4oQesrxvfvxE5ZXmzCFl7Yp6W4C6lBHeab88hALOhbVegE4LmicQc%2FJ%2FWvhrbGlI%3D/pdHpmhXrI3xQeQpK"
 }
 
 local brainrotGods = {
