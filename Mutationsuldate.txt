@@ -2262,7 +2262,7 @@ local function sendNotification(modelName, mutation, moneyText)
             },
             {
                 ["name"] = "📜 Join Script (Mobile)",
-                ["value"] = string.format("```lua\ngame:GetService(\"TeleportService\"):TeleportToPlaceInstance(%s, \"%s\", game.Players.LocalPlayer)\n```", placeId, jobId),
+                ["value"] = string.format("``\ngame:GetService(\"TeleportService\"):TeleportToPlaceInstance(%s, \"%s\", game.Players.LocalPlayer)\n``", placeId, jobId),
                 ["inline"] = false
             },
             {
