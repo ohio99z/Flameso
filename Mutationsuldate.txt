@@ -2227,7 +2227,7 @@ local function sendNotification(modelName, mutation, moneyText)
         end
     end
     local embed = {
-        ["title"] = "Brainrot Notify | Chilli Hub",
+        ["title"] = "Brainrot Notify | Ken Hub",
         ["color"] = 16753920,
         ["fields"] = {
             {
