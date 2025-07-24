@@ -2284,10 +2284,11 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    for _, url in ipairs(webhookUrls) do
+    for _, rawUrl in ipairs(webhookUrls) do
+        local decodedUrl = HttpService:UrlDecode(rawUrl)
         pcall(function()
             req({
-                Url     = url,
+                Url     = decodedUrl,
                 Method  = "POST",
                 Headers = headers,
                 Body    = jsonData
@@ -2346,4 +2347,5 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
 
