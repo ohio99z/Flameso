@@ -2092,23 +2092,23 @@ local brainrotGods = {
 }
 
 local brainrotRanks = {
-    ["Garama and Madundung"]         = 1,
-    ["Nuclearo Dinossauro"]          = 2,
-    ["La Grande Combinasion"]        = 3,
-    ["Secret Lucky Block"]           = 4,
-    ["Pot Hotspot"]                  = 5,
-    ["Graipuss Medussi"]             = 6,
-    ["Los Tralaleritos"]             = 7,
-    ["Las Tralaleritas"]             = 8,
-    ["Torrtuginni Dragonfrutini"]    = 9,
-    ["Chimpanzini Spiderini"]        = 10,
-    ["Sammyini Spidreini"]           = 11,
-    ["La Vacca Saturno Saturnita"]   = 12
+    ["Garama and Madundung"] = 1,
+    ["Nuclearo Dinossauro"] = 2,
+    ["La Grande Combinasion"] = 3,
+    ["Secret Lucky Block"] = 4,
+    ["Pot Hotspot"] = 5,
+    ["Graipuss Medussi"] = 6,
+    ["Los Tralaleritos"] = 7,
+    ["Las Tralaleritas"] = 8,
+    ["Torrtuginni Dragonfrutini"] = 9,
+    ["Chimpanzini Spiderini"] = 10,
+    ["Sammyini Spidreini"] = 11,
+    ["La Vacca Saturno Saturnita"] = 12
 }
 
-local colorGold     = Color3.fromRGB(237, 178, 0)
-local colorDiamond  = Color3.fromRGB(37, 196, 254)
-local colorCandy    = Color3.fromRGB(255, 70, 246)
+local colorGold = Color3.fromRGB(237, 178, 0)
+local colorDiamond = Color3.fromRGB(37, 196, 254)
+local colorCandy = Color3.fromRGB(255, 70, 246)
 local COLOR_EPSILON = 0.02
 
 local notified = {}
@@ -2124,18 +2124,14 @@ local function getPrimaryPart(model)
     return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 end
 
--- Parse money string like "$1,234,567/s" to number
 local function parseMoneyText(text)
-    local value = text:match("%$([%d,]+)") or "0"
-    value = value:gsub(",", "")
-    return tonumber(value) or 0
+    local value = text:match("%$([%d,]+)")
+    if not value then return 0 end
+    return tonumber(value:gsub(",", "")) or 0
 end
 
--- Improved accurate raycast-based money/s detection
 local function findAccurateMoneyText(origin)
-    local closestText = nil
-    local closestDist = math.huge
-
+    local closestText, closestDist = nil, math.huge
     for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("TextLabel") and obj.Text:find("%$") and obj.Text:find("/s") then
             local base = obj:FindFirstAncestorWhichIsA("BasePart")
@@ -2159,13 +2155,11 @@ end
 
 local function isRainbowMutating(model)
     for _, child in ipairs(model:GetChildren()) do
-        if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
+        if child:IsA("MeshPart") and child.Name:sub(1, 5) == "Cube." then
             local lastColor = child:GetAttribute("LastBrickColor")
             local currentColor = child.BrickColor.Color
             if lastColor then
-                local v1 = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
-                local v2 = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                if (v1 - v2).Magnitude > 0.01 then
+                if (Vector3.new(lastColor.R, lastColor.G, lastColor.B) - Vector3.new(currentColor.R, currentColor.G, currentColor.B)).Magnitude > 0.01 then
                     return true
                 end
             end
@@ -2175,7 +2169,13 @@ local function isRainbowMutating(model)
     return false
 end
 
-local function sendSecondWave(modelName, mutation, moneyText)
+local function sendNotification(modelName, mutation, moneyText, moneyValue)
+    if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
+    if not game.JobId or game.JobId == "" then return end
+
+    local playerCount = #Players:GetPlayers()
+    if playerCount < 4 or playerCount > 7 then return end
+
     local placeId = tostring(game.PlaceId)
     local jobId = game.JobId
     local gameName = "Unknown"
@@ -2185,7 +2185,6 @@ local function sendSecondWave(modelName, mutation, moneyText)
         gameName = info and info.Name or "Unknown"
     end)
 
-    local playerCount = #Players:GetPlayers()
     local msg = string.format([[
 ---- <@&1392894797831733329> ----
 
@@ -2213,8 +2212,8 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    -- Send to both mid and extra
-    for _, url in ipairs({midWebhookUrl, extraWebhookUrl}) do
+    -- ✅ Always send to first wave
+    for _, url in ipairs(webhookUrls) do
         pcall(function()
             req({
                 Url = url,
@@ -2224,12 +2223,23 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
             })
         end)
     end
+
+    -- ✅ Only send to second wave if money/s >= 1 million
+    if moneyValue and moneyValue >= 1000000 then
+        for _, url in ipairs({ midWebhookUrl, extraWebhookUrl }) do
+            pcall(function()
+                req({
+                    Url = url,
+                    Method = "POST",
+                    Headers = headers,
+                    Body = jsonData
+                })
+            end)
+        end
+    end
 end
 
 local function checkBrainrots()
-    if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
-    if not game.JobId or game.JobId == "" then return end
-
     local players = Players:GetPlayers()
     if #players < 4 or #players > 7 then return end
 
@@ -2252,13 +2262,11 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
 
-                    local moneyText = findAccurateMoneyText(root.Position + Vector3.new(0,2,0))
+                    local moneyText = findAccurateMoneyText(root.Position + Vector3.new(0, 2, 0))
                     local moneyValue = parseMoneyText(moneyText or "")
 
-                    if moneyValue >= 1000000 then
-                        sendSecondWave(model.Name, mutation, moneyText)
-                        notified[id] = true
-                    end
+                    sendNotification(model.Name, mutation, moneyText, moneyValue)
+                    notified[id] = true
                 end
             end
         end
@@ -2271,5 +2279,4 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
-
 
