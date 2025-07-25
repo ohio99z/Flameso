@@ -2092,26 +2092,32 @@ local brainrotGods = {
 }
 
 local brainrotRanks = {
-    ["Garama and Madundung"] = 1,
-    ["Nuclearo Dinossauro"] = 2,
-    ["La Grande Combinasion"] = 3,
-    ["Secret Lucky Block"] = 4,
-    ["Pot Hotspot"] = 5,
-    ["Graipuss Medussi"] = 6,
-    ["Los Tralaleritos"] = 7,
-    ["Las Tralaleritas"] = 8,
-    ["Torrtuginni Dragonfrutini"] = 9,
-    ["Chimpanzini Spiderini"] = 10,
-    ["Sammyini Spidreini"] = 11,
-    ["La Vacca Saturno Saturnita"] = 12
+    ["Garama and Madundung"]         = 1,
+    ["Nuclearo Dinossauro"]          = 2,
+    ["La Grande Combinasion"]        = 3,
+    ["Secret Lucky Block"]           = 4,
+    ["Pot Hotspot"]                  = 5,
+    ["Graipuss Medussi"]             = 6,
+    ["Los Tralaleritos"]             = 7,
+    ["Las Tralaleritas"]             = 8,
+    ["Torrtuginni Dragonfrutini"]    = 9,
+    ["Chimpanzini Spiderini"]        = 10,
+    ["Sammyini Spidreini"]           = 11,
+    ["La Vacca Saturno Saturnita"]   = 12
 }
 
-local colorGold = Color3.fromRGB(237, 178, 0)
-local colorDiamond = Color3.fromRGB(37, 196, 254)
-local colorCandy = Color3.fromRGB(255, 70, 246)
+local specialForThirdWebhook = {
+    ["Garama and Madundung"] = true,
+    ["Nuclearo Dinossauro"]  = true,
+    ["La Grande Combinasion"] = true
+}
+
+local colorGold     = Color3.fromRGB(237, 178, 0)
+local colorDiamond  = Color3.fromRGB(37, 196, 254)
+local colorCandy    = Color3.fromRGB(255, 70, 246)
 local COLOR_EPSILON = 0.02
 
-local notified = {}
+local notified        = {}
 local lastSentMessage = ""
 
 local function colorsAreClose(c1, c2)
@@ -2120,47 +2126,37 @@ local function colorsAreClose(c1, c2)
            math.abs(c1.B - c2.B) < COLOR_EPSILON
 end
 
-local function getPrimaryPart(model)
-    return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+local function matchesMoneyPattern(text)
+    return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
 end
 
--- Parse money string like "$1,234,567/s" to number
-local function parseMoneyText(text)
-    local value = text and text:match("%$([%d,]+)")
-    if not value then return 0 end
-    return tonumber(value:gsub(",", "")) or 0
-end
-
--- New vertical raycast to detect money/s TextLabel above the model
-local function findMoneyTextAbove(position)
-    local origin = position
-    local direction = Vector3.new(0, 9, 0) -- 9 studs upward
-
-    local result = Workspace:Raycast(origin, direction)
-    if not result then return nil end
-
-    local part = result.Instance
-    if not part then return nil end
-
-    -- Search for a TextLabel descendant in that part's hierarchy
-    local guiText = nil
-    for _, desc in ipairs(part:GetDescendants()) do
-        if desc:IsA("TextLabel") and desc.Text:find("%$") and desc.Text:find("/s") then
-            guiText = desc.Text
-            break
+local function findNearbyMoneyText(position, range)
+    for _, guiObj in ipairs(Workspace:GetDescendants()) do
+        if guiObj:IsA("TextLabel") and matchesMoneyPattern(guiObj.Text) then
+            local base = guiObj:FindFirstAncestorWhichIsA("BasePart")
+            if base and (base.Position - position).Magnitude <= range then
+                return guiObj.Text
+            end
         end
     end
+end
 
-    return guiText
+local function getPrimaryPart(model)
+    if model.PrimaryPart then return model.PrimaryPart end
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then return part end
+    end
 end
 
 local function isRainbowMutating(model)
     for _, child in ipairs(model:GetChildren()) do
-        if child:IsA("MeshPart") and child.Name:sub(1, 5) == "Cube." then
-            local lastColor = child:GetAttribute("LastBrickColor")
+        if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
+            local lastColor    = child:GetAttribute("LastBrickColor")
             local currentColor = child.BrickColor.Color
             if lastColor then
-                if (Vector3.new(lastColor.R, lastColor.G, lastColor.B) - Vector3.new(currentColor.R, currentColor.G, currentColor.B)).Magnitude > 0.01 then
+                local v1 = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
+                local v2 = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
+                if (v1 - v2).Magnitude > 0.01 then
                     return true
                 end
             end
@@ -2170,17 +2166,25 @@ local function isRainbowMutating(model)
     return false
 end
 
-local function sendNotification(modelName, mutation, moneyText, moneyValue)
-    if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
-    if not game.JobId or game.JobId == "" then return end
+local function getPlayerCount()
+    return #Players:GetPlayers()
+end
 
-    local playerCount = #Players:GetPlayers()
+local function sendNotification(modelName, mutation, moneyText)
+    if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
+    if not game.JobId or game.JobId == "" or game.JobId:lower():find("priv") then return end
+
+    local playerCount = getPlayerCount()
     if playerCount < 4 or playerCount > 7 then return end
 
     local placeId = tostring(game.PlaceId)
-    local jobId = game.JobId
-    local gameName = "Unknown"
+    local jobId   = game.JobId
+    if not placeId or placeId == "" then return end
+    if not jobId   or jobId   == "" then return end
+    if not modelName or modelName == "" then return end
+    if not mutation  or mutation  == "" then return end
 
+    local gameName = "Unknown"
     pcall(function()
         local info = MarketplaceService:GetProductInfo(game.PlaceId)
         gameName = info and info.Name or "Unknown"
@@ -2204,39 +2208,48 @@ local teleportService = game:GetService("TeleportService")
 teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
 
+    if msg:find("@everyone") or msg:find("@here") then return end
+    if not msg:find("^---- <@&1392894797831733329> ----\n\n--- 📢 %*%*Game:%*%*") then return end
     if msg == lastSentMessage then return end
     lastSentMessage = msg
 
     local payload = { content = msg }
     local jsonData = HttpService:JSONEncode(payload)
-    local headers = { ["Content-Type"] = "application/json" }
+    local headers  = { ["Content-Type"] = "application/json" }
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    -- ✅ Always send to first wave
+    -- Always send to default 2 webhooks
     for _, url in ipairs(webhookUrls) do
         pcall(function()
             req({
-                Url = url,
-                Method = "POST",
+                Url     = url,
+                Method  = "POST",
                 Headers = headers,
-                Body = jsonData
+                Body    = jsonData
             })
         end)
     end
 
-    -- ✅ Only send to second wave if money/s ≥ 1 million
-    if moneyValue and moneyValue >= 1000000 then
-        for _, url in ipairs({ midWebhookUrl, extraWebhookUrl }) do
-            pcall(function()
-                req({
-                    Url = url,
-                    Method = "POST",
-                    Headers = headers,
-                    Body = jsonData
-                })
-            end)
-        end
+    -- Send to mid and extra webhook only for special ranked brainrots
+    if specialForThirdWebhook[modelName] then
+        pcall(function()
+            req({
+                Url     = midWebhookUrl,
+                Method  = "POST",
+                Headers = headers,
+                Body    = jsonData
+            })
+        end)
+
+        pcall(function()
+            req({
+                Url     = extraWebhookUrl,
+                Method  = "POST",
+                Headers = headers,
+                Body    = jsonData
+            })
+        end)
     end
 end
 
@@ -2244,33 +2257,43 @@ local function checkBrainrots()
     local players = Players:GetPlayers()
     if #players < 4 or #players > 7 then return end
 
+    local bestModel = nil
+    local bestRank = math.huge
+
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
             if root then
                 local id = model:GetDebugId()
                 if not notified[id] then
-                    local mutation = "🕳️"
-                    local color = root.Color
-
-                    if colorsAreClose(color, colorGold) then
-                        mutation = "🌕 Gold"
-                    elseif colorsAreClose(color, colorDiamond) then
-                        mutation = "💎 Diamond"
-                    elseif colorsAreClose(color, colorCandy) then
-                        mutation = "🍬 Candy"
-                    elseif isRainbowMutating(model) then
-                        mutation = "🌈 Rainbow"
+                    local rank = brainrotRanks[model.Name] or 9999
+                    if rank < bestRank then
+                        bestModel = model
+                        bestRank = rank
                     end
-
-                    local moneyText = findMoneyTextAbove(root.Position)
-                    local moneyValue = parseMoneyText(moneyText)
-
-                    sendNotification(model.Name, mutation, moneyText, moneyValue)
-                    notified[id] = true
                 end
             end
         end
+    end
+
+    if bestModel then
+        local root = getPrimaryPart(bestModel)
+        local color = root.Color
+        local mutation = "🕳️"
+
+        if colorsAreClose(color, colorGold) then
+            mutation = "🌕 Gold"
+        elseif colorsAreClose(color, colorDiamond) then
+            mutation = "💎 Diamond"
+        elseif colorsAreClose(color, colorCandy) then
+            mutation = "🍬 Candy"
+        elseif isRainbowMutating(bestModel) then
+            mutation = "🌈 Rainbow"
+        end
+
+        local money = findNearbyMoneyText(root.Position + Vector3.new(0,2,0), 6) or "N/A"
+        sendNotification(bestModel.Name, mutation, money)
+        notified[bestModel:GetDebugId()] = true
     end
 end
 
