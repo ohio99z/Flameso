@@ -2124,33 +2124,34 @@ local function getPrimaryPart(model)
     return model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
 end
 
+-- Parse money string like "$1,234,567/s" to number
 local function parseMoneyText(text)
-    local value = text:match("%$([%d,]+)")
+    local value = text and text:match("%$([%d,]+)")
     if not value then return 0 end
     return tonumber(value:gsub(",", "")) or 0
 end
 
-local function findAccurateMoneyText(origin)
-    local closestText, closestDist = nil, math.huge
-    for _, obj in ipairs(Workspace:GetDescendants()) do
-        if obj:IsA("TextLabel") and obj.Text:find("%$") and obj.Text:find("/s") then
-            local base = obj:FindFirstAncestorWhichIsA("BasePart")
-            if base then
-                local dist = (base.Position - origin).Magnitude
-                if dist < 10 then
-                    local direction = (base.Position - origin).Unit
-                    local rayResult = Workspace:Raycast(origin, direction * dist)
-                    if rayResult and rayResult.Instance == base then
-                        if dist < closestDist then
-                            closestDist = dist
-                            closestText = obj.Text
-                        end
-                    end
-                end
-            end
+-- New vertical raycast to detect money/s TextLabel above the model
+local function findMoneyTextAbove(position)
+    local origin = position
+    local direction = Vector3.new(0, 9, 0) -- 9 studs upward
+
+    local result = Workspace:Raycast(origin, direction)
+    if not result then return nil end
+
+    local part = result.Instance
+    if not part then return nil end
+
+    -- Search for a TextLabel descendant in that part's hierarchy
+    local guiText = nil
+    for _, desc in ipairs(part:GetDescendants()) do
+        if desc:IsA("TextLabel") and desc.Text:find("%$") and desc.Text:find("/s") then
+            guiText = desc.Text
+            break
         end
     end
-    return closestText
+
+    return guiText
 end
 
 local function isRainbowMutating(model)
@@ -2224,7 +2225,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
         end)
     end
 
-    -- ✅ Only send to second wave if money/s >= 1 million
+    -- ✅ Only send to second wave if money/s ≥ 1 million
     if moneyValue and moneyValue >= 1000000 then
         for _, url in ipairs({ midWebhookUrl, extraWebhookUrl }) do
             pcall(function()
@@ -2262,8 +2263,8 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
 
-                    local moneyText = findAccurateMoneyText(root.Position + Vector3.new(0, 2, 0))
-                    local moneyValue = parseMoneyText(moneyText or "")
+                    local moneyText = findMoneyTextAbove(root.Position)
+                    local moneyValue = parseMoneyText(moneyText)
 
                     sendNotification(model.Name, mutation, moneyText, moneyValue)
                     notified[id] = true
