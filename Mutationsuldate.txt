@@ -2106,10 +2106,14 @@ local brainrotRanks = {
     ["La Vacca Saturno Saturnita"]   = 12
 }
 
+-- EXTENDED: Now includes all 6 special models
 local specialForThirdWebhook = {
-    ["Garama and Madundung"] = true,
-    ["Nuclearo Dinossauro"]  = true,
-    ["La Grande Combinasion"] = true
+    ["Garama and Madundung"]     = true,
+    ["Nuclearo Dinossauro"]      = true,
+    ["La Grande Combinasion"]    = true,
+    ["Secret Lucky Block"]       = true,
+    ["Pot Hotspot"]              = true,
+    ["Graipuss Medussi"]         = true,
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2231,7 +2235,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
         end)
     end
 
-    -- Send to mid and extra webhook only for special ranked brainrots
+    -- Send to mid and extra webhook for 6 specified brainrots
     if specialForThirdWebhook[modelName] then
         pcall(function()
             req({
@@ -2300,7 +2304,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(50)
+        task.wait(0.5)
     end
 end)
 
