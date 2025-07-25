@@ -2295,11 +2295,13 @@ local brainrotGods = {
     ["Garama and Madundung"] = true,
     ["Nuclearo Dinossauro"] = true,
     ["La Grande Combinasion"] = true,
+    ["Chicleteira Bicicleteira"] = true,
     ["Secret Lucky Block"] = true,
     ["Pot Hotspot"] = true,
     ["Graipuss Medussi"] = true,
-    ["Los Tralaleritos"] = true,
+    ["Las Vaquitas Saturnitas"] = true,
     ["Las Tralaleritas"] = true,
+    ["Los Tralaleritos"] = true,
     ["Torrtuginni Dragonfrutini"] = true,
     ["Chimpanzini Spiderini"] = true,
     ["Sammyini Spidreini"] = true,
@@ -2310,22 +2312,24 @@ local brainrotRanks = {
     ["Garama and Madundung"]         = 1,
     ["Nuclearo Dinossauro"]          = 2,
     ["La Grande Combinasion"]        = 3,
-    ["Secret Lucky Block"]           = 4,
-    ["Pot Hotspot"]                  = 5,
-    ["Graipuss Medussi"]             = 6,
-    ["Los Tralaleritos"]             = 7,
-    ["Las Tralaleritas"]             = 8,
-    ["Torrtuginni Dragonfrutini"]    = 9,
-    ["Chimpanzini Spiderini"]        = 10,
-    ["Sammyini Spidreini"]           = 11,
-    ["La Vacca Saturno Saturnita"]   = 12
+    ["Chicleteira Bicicleteira"]     = 4,
+    ["Secret Lucky Block"]           = 5,
+    ["Pot Hotspot"]                  = 6,
+    ["Graipuss Medussi"]             = 7,
+    ["Las Vaquitas Saturnitas"]      = 8,
+    ["Las Tralaleritas"]             = 9,
+    ["Los Tralaleritos"]             = 10,
+    ["Torrtuginni Dragonfrutini"]    = 11,
+    ["Chimpanzini Spiderini"]        = 12,
+    ["Sammyini Spidreini"]           = 13,
+    ["La Vacca Saturno Saturnita"]   = 14,
 }
 
--- EXTENDED: Now includes all 6 special models
 local specialForThirdWebhook = {
     ["Garama and Madundung"]     = true,
     ["Nuclearo Dinossauro"]      = true,
     ["La Grande Combinasion"]    = true,
+    ["Chicleteira Bicicleteira"] = true,
     ["Secret Lucky Block"]       = true,
     ["Pot Hotspot"]              = true,
     ["Graipuss Medussi"]         = true,
@@ -2390,8 +2394,26 @@ local function getPlayerCount()
 end
 
 local function sendNotification(modelName, mutation, moneyText)
-    if game.PrivateServerId ~= "" and game.PrivateServerOwnerId ~= 0 then return end
-    if not game.JobId or game.JobId == "" or game.JobId:lower():find("priv") then return end
+    -- Stronger Private Server Detection
+if game.PrivateServerId ~= "" then return end
+if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
+if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
+
+local jobId = game.JobId
+if not jobId or jobId == "" then return end
+
+local lowerJobId = jobId:lower()
+if lowerJobId:find("priv") or lowerJobId:find("reserved") or lowerJobId:find("vip") then return end
+
+-- Optional: Detect reserved servers more accurately via player count mismatch
+if #Players:GetPlayers() == 1 then
+    local success, result = pcall(function()
+        return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
+    end)
+    if not success or not result or result.InstanceId ~= jobId then
+        return
+    end
+end
 
     local playerCount = getPlayerCount()
     if playerCount < 4 or playerCount > 7 then return end
@@ -2410,17 +2432,18 @@ local function sendNotification(modelName, mutation, moneyText)
     end)
 
     local msg = string.format([[
+
 ---- <@&1392894797831733329> ----
 
---- 📢 **Game:** %s
+--- 📢 Game: %s
 
---- 💡 **Model Name:** "%s"
+--- 💡 Model Name: "%s"
 
---- 🎨 **Mutation:** %s
+--- 🎨 Mutation: %s
 
---- 💵 **Money/s:** %s
+--- 💵 Money/s: %s
 
---- 👥 **Player Count:** %d/8
+--- 👥 Player Count: %d/8
 
 local player = game.Players:GetPlayers()[1]
 local teleportService = game:GetService("TeleportService")
@@ -2428,7 +2451,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
 
     if msg:find("@everyone") or msg:find("@here") then return end
-    if not msg:find("^---- <@&1392894797831733329> ----\n\n--- 📢 %*%*Game:%*%*") then return end
     if msg == lastSentMessage then return end
     lastSentMessage = msg
 
@@ -2438,7 +2460,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    -- Always send to default 2 webhooks
     for _, url in ipairs(webhookUrls) do
         pcall(function()
             req({
@@ -2450,7 +2471,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
         end)
     end
 
-    -- Send to mid and extra webhook for 6 specified brainrots
     if specialForThirdWebhook[modelName] then
         pcall(function()
             req({
@@ -2476,43 +2496,31 @@ local function checkBrainrots()
     local players = Players:GetPlayers()
     if #players < 4 or #players > 7 then return end
 
-    local bestModel = nil
-    local bestRank = math.huge
-
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
             if root then
                 local id = model:GetDebugId()
                 if not notified[id] then
-                    local rank = brainrotRanks[model.Name] or 9999
-                    if rank < bestRank then
-                        bestModel = model
-                        bestRank = rank
+                    local color = root.Color
+                    local mutation = "🕳️"
+
+                    if colorsAreClose(color, colorGold) then
+                        mutation = "🌕 Gold"
+                    elseif colorsAreClose(color, colorDiamond) then
+                        mutation = "💎 Diamond"
+                    elseif colorsAreClose(color, colorCandy) then
+                        mutation = "🍬 Candy"
+                    elseif isRainbowMutating(model) then
+                        mutation = "🌈 Rainbow"
                     end
+
+                    local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 6) or "N/A"
+                    sendNotification(model.Name, mutation, money)
+                    notified[id] = true
                 end
             end
         end
-    end
-
-    if bestModel then
-        local root = getPrimaryPart(bestModel)
-        local color = root.Color
-        local mutation = "🕳️"
-
-        if colorsAreClose(color, colorGold) then
-            mutation = "🌕 Gold"
-        elseif colorsAreClose(color, colorDiamond) then
-            mutation = "💎 Diamond"
-        elseif colorsAreClose(color, colorCandy) then
-            mutation = "🍬 Candy"
-        elseif isRainbowMutating(bestModel) then
-            mutation = "🌈 Rainbow"
-        end
-
-        local money = findNearbyMoneyText(root.Position + Vector3.new(0,2,0), 6) or "N/A"
-        sendNotification(bestModel.Name, mutation, money)
-        notified[bestModel:GetDebugId()] = true
     end
 end
 
