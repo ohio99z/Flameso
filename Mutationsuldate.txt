@@ -2288,13 +2288,10 @@ local webhookUrls = {
     "https://discord.com/api/webhooks/1397994822396149890/k7gMoTUoiEFaR4733ymwSKjRd5iVfwhiCyWRDNbltfvPSKQHQpWpIr5GxCOfkSx-kWRd"
 }
 
-local extraWebhookUrl = "https://discord.com/api/webhooks/1398063143498027018/3_tAgWwlYaJrnS643ZoFe5IVCtMOmAjN8d_ECv058nuZTOzpVspgBPEJ9DQ30ItLjmMi"
+local extraWebhookUrl = "https://discord.com/api/webhooks/1396804813471350874/RHDbjxnu6lvkgahhNXZWKuoYU6lZOff6BcvOud5hhSnw_hUXX1h_EP00jmnt3n8bhQKp"
 local midWebhookUrl   = "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
 
 local brainrotGods = {
-    ["Garama and Madundung"] = true,
-    ["Nuclearo Dinossauro"] = true,
-    ["La Grande Combinasion"] = true,
     ["Chicleteira Bicicleteira"] = true,
     ["Secret Lucky Block"] = true,
     ["Pot Hotspot"] = true,
@@ -2308,31 +2305,10 @@ local brainrotGods = {
     ["La Vacca Saturno Saturnita"] = true,
 }
 
-local brainrotRanks = {
-    ["Garama and Madundung"]         = 1,
-    ["Nuclearo Dinossauro"]          = 2,
-    ["La Grande Combinasion"]        = 3,
-    ["Chicleteira Bicicleteira"]     = 4,
-    ["Secret Lucky Block"]           = 5,
-    ["Pot Hotspot"]                  = 6,
-    ["Graipuss Medussi"]             = 7,
-    ["Las Vaquitas Saturnitas"]      = 8,
-    ["Las Tralaleritas"]             = 9,
-    ["Los Tralaleritos"]             = 10,
-    ["Torrtuginni Dragonfrutini"]    = 11,
-    ["Chimpanzini Spiderini"]        = 12,
-    ["Sammyini Spidreini"]           = 13,
-    ["La Vacca Saturno Saturnita"]   = 14,
-}
-
 local specialForThirdWebhook = {
     ["Garama and Madundung"]     = true,
     ["Nuclearo Dinossauro"]      = true,
     ["La Grande Combinasion"]    = true,
-    ["Chicleteira Bicicleteira"] = true,
-    ["Secret Lucky Block"]       = true,
-    ["Pot Hotspot"]              = true,
-    ["Graipuss Medussi"]         = true,
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2341,9 +2317,7 @@ local colorCandy    = Color3.fromRGB(255, 70, 246)
 local COLOR_EPSILON = 0.02
 
 local notified        = {}
-local lastSentMessage = ""
-
--- Track player join times for the 30-second check
+local lastSentMessage = {}
 local playerJoinTimes = {}
 
 Players.PlayerAdded:Connect(function(player)
@@ -2385,7 +2359,7 @@ end
 local function isRainbowMutating(model)
     for _, child in ipairs(model:GetChildren()) do
         if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
-            local lastColor    = child:GetAttribute("LastBrickColor")
+            local lastColor = child:GetAttribute("LastBrickColor")
             local currentColor = child.BrickColor.Color
             if lastColor then
                 local v1 = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
@@ -2405,10 +2379,11 @@ local function getPlayerCount()
 end
 
 local function sendNotification(modelName, mutation, moneyText)
-    -- Stronger Private Server Detection
-    if game.PrivateServerId ~= "" then return end
-    if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
-    if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
+    if game.PrivateServerId ~= "" or
+       (game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0) or
+       (game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0) then
+        return
+    end
 
     local jobId = game.JobId
     if not jobId or jobId == "" then return end
@@ -2420,19 +2395,14 @@ local function sendNotification(modelName, mutation, moneyText)
         local success, result = pcall(function()
             return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
         end)
-        if not success or not result or result.InstanceId ~= jobId then
-            return
-        end
+        if not success or not result or result.InstanceId ~= jobId then return end
     end
 
     local playerCount = getPlayerCount()
     if playerCount < 5 or playerCount > 7 then return end
 
     local placeId = tostring(game.PlaceId)
-    if not placeId or placeId == "" then return end
-    if not jobId   or jobId   == "" then return end
-    if not modelName or modelName == "" then return end
-    if not mutation  or mutation  == "" then return end
+    if not modelName or not mutation then return end
 
     local gameName = "Unknown"
     pcall(function()
@@ -2442,7 +2412,7 @@ local function sendNotification(modelName, mutation, moneyText)
 
     local msg = string.format([[
 
----- <@&1392894797831733329> ----
+---- Secret Is found✅ ----
 
 --- 📢 Game: %s
 
@@ -2460,8 +2430,8 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 ]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
 
     if msg:find("@everyone") or msg:find("@here") then return end
-    if msg == lastSentMessage then return end
-    lastSentMessage = msg
+    if lastSentMessage[modelName] == msg then return end
+    lastSentMessage[modelName] = msg
 
     local payload = { content = msg }
     local jsonData = HttpService:JSONEncode(payload)
@@ -2471,50 +2441,43 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 
     for _, url in ipairs(webhookUrls) do
         pcall(function()
-            req({
-                Url     = url,
-                Method  = "POST",
-                Headers = headers,
-                Body    = jsonData
-            })
+            req({ Url = url, Method = "POST", Headers = headers, Body = jsonData })
         end)
     end
 
     if specialForThirdWebhook[modelName] then
-        local enoughTimePassed = false
+        local enoughTimeForMid = false
+        local enoughTimeForExtra = false
+
         for _, player in ipairs(Players:GetPlayers()) do
             local joinTime = playerJoinTimes[player.UserId]
-            if joinTime and (tick() - joinTime) >= 30 then
-                enoughTimePassed = true
-                break
+            if joinTime then
+                local timeInGame = tick() - joinTime
+                if timeInGame >= 30 then
+                    enoughTimeForMid = true
+                end
+                if timeInGame >= 7 then
+                    enoughTimeForExtra = true
+                end
             end
         end
 
-        if enoughTimePassed then
+        if enoughTimeForMid then
             pcall(function()
-                req({
-                    Url     = midWebhookUrl,
-                    Method  = "POST",
-                    Headers = headers,
-                    Body    = jsonData
-                })
+                req({ Url = midWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
             end)
+        end
 
+        if enoughTimeForExtra then
             pcall(function()
-                req({
-                    Url     = extraWebhookUrl,
-                    Method  = "POST",
-                    Headers = headers,
-                    Body    = jsonData
-                })
+                req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
             end)
         end
     end
 end
 
 local function checkBrainrots()
-    local players = Players:GetPlayers()
-    if #players < 5 or #players > 7 then return end
+    if #Players:GetPlayers() < 5 or #Players:GetPlayers() > 7 then return end
 
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
@@ -2535,7 +2498,7 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
 
-                    local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 8) or "N/A"
+                    local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 6)
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
@@ -2547,7 +2510,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(0.5)
+        task.wait(0.1)
     end
 end)
 
