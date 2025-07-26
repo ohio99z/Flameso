@@ -2459,7 +2459,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
         local enoughTimePassed = false
         for _, player in ipairs(Players:GetPlayers()) do
             local joinTime = playerJoinTimes[player.UserId]
-            if joinTime and (tick() - joinTime) >= 30 then
+            if joinTime and (tick() - joinTime) >= 1 then
                 enoughTimePassed = true
                 break
             end
