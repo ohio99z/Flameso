@@ -2292,6 +2292,9 @@ local extraWebhookUrl = "https://discord.com/api/webhooks/1396804813471350874/RH
 local midWebhookUrl   = "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
 
 local brainrotGods = {
+    ["Garama and Madundung"] = true,
+    ["Nuclearo Dinossauro"] = true,
+    ["La Grande Combinasion"] = true,
     ["Chicleteira Bicicleteira"] = true,
     ["Secret Lucky Block"] = true,
     ["Pot Hotspot"] = true,
@@ -2302,13 +2305,31 @@ local brainrotGods = {
     ["Torrtuginni Dragonfrutini"] = true,
     ["Chimpanzini Spiderini"] = true,
     ["Sammyini Spidreini"] = true,
-    ["La Vacca Saturno Saturnita"] = true,
+    ["La Vacca Saturno Saturnita"] = true
+}
+
+local brainrotRanks = {
+    ["Garama and Madundung"] = 1,
+    ["Nuclearo Dinossauro"] = 2,
+    ["La Grande Combinasion"] = 3,
+    ["Chicleteira Bicicleteira"] = 4,
+    ["Secret Lucky Block"] = 5,
+    ["Pot Hotspot"] = 6,
+    ["Graipuss Medussi"] = 7,
+    ["Las Vaquitas Saturnitas"] = 8,
+    ["Las Tralaleritas"] = 9,
+    ["Los Tralaleritos"] = 10,
+    ["Torrtuginni Dragonfrutini"] = 11,
+    ["Chimpanzini Spiderini"] = 12,
+    ["Sammyini Spidreini"] = 13,
+    ["La Vacca Saturno Saturnita"] = 14
 }
 
 local specialForThirdWebhook = {
-    ["Garama and Madundung"]     = true,
-    ["Nuclearo Dinossauro"]      = true,
-    ["La Grande Combinasion"]    = true,
+    ["Garama and Madundung"] = true,
+    ["Nuclearo Dinossauro"] = true,
+    ["La Grande Combinasion"] = true
+    ["Chicleteira Bicicleteira"] = true,
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2410,24 +2431,20 @@ local function sendNotification(modelName, mutation, moneyText)
         gameName = info and info.Name or "Unknown"
     end)
 
+    local rank = brainrotRanks[modelName] or "?"
     local msg = string.format([[
+---- Secret Found ✅ ----
 
----- Secret Is found✅ ----
+🥇 Rank: %s
+📢 Game: %s
+💡 Model Name: "%s"
+🎨 Mutation: %s
+💵 Money/s: %s
+👥 Player Count: %d/8
 
---- 📢 Game: %s
-
---- 💡 Model Name: "%s"
-
---- 🎨 Mutation: %s
-
---- 💵 Money/s: %s
-
---- 👥 Player Count: %d/8
-
-local player = game.Players:GetPlayers()[1]
-local teleportService = game:GetService("TeleportService")
-teleportService:TeleportToPlaceInstance("%s", "%s", player)
-]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
+local p = game.Players:GetPlayers()[1]
+game:GetService("TeleportService"):TeleportToPlaceInstance("%s","%s",p)
+]], rank, gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
 
     if msg:find("@everyone") or msg:find("@here") then return end
     if lastSentMessage[modelName] == msg then return end
@@ -2453,12 +2470,8 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
             local joinTime = playerJoinTimes[player.UserId]
             if joinTime then
                 local timeInGame = tick() - joinTime
-                if timeInGame >= 30 then
-                    enoughTimeForMid = true
-                end
-                if timeInGame >= 7 then
-                    enoughTimeForExtra = true
-                end
+                if timeInGame >= 30 then enoughTimeForMid = true end
+                if timeInGame >= 7 then enoughTimeForExtra = true end
             end
         end
 
@@ -2467,7 +2480,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
                 req({ Url = midWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
             end)
         end
-
         if enoughTimeForExtra then
             pcall(function()
                 req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
@@ -2487,7 +2499,6 @@ local function checkBrainrots()
                 if not notified[id] then
                     local color = root.Color
                     local mutation = "🕳️"
-
                     if colorsAreClose(color, colorGold) then
                         mutation = "🌕 Gold"
                     elseif colorsAreClose(color, colorDiamond) then
@@ -2497,7 +2508,6 @@ local function checkBrainrots()
                     elseif isRainbowMutating(model) then
                         mutation = "🌈 Rainbow"
                     end
-
                     local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 6)
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
@@ -2513,4 +2523,5 @@ task.spawn(function()
         task.wait(0.1)
     end
 end)
+
 
