@@ -2343,6 +2343,17 @@ local COLOR_EPSILON = 0.02
 local notified        = {}
 local lastSentMessage = ""
 
+-- Track player join times for the 30-second check
+local playerJoinTimes = {}
+
+Players.PlayerAdded:Connect(function(player)
+    playerJoinTimes[player.UserId] = tick()
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    playerJoinTimes[player.UserId] = nil
+end)
+
 local function colorsAreClose(c1, c2)
     return math.abs(c1.R - c2.R) < COLOR_EPSILON and
            math.abs(c1.G - c2.G) < COLOR_EPSILON and
@@ -2395,31 +2406,29 @@ end
 
 local function sendNotification(modelName, mutation, moneyText)
     -- Stronger Private Server Detection
-if game.PrivateServerId ~= "" then return end
-if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
-if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
+    if game.PrivateServerId ~= "" then return end
+    if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
+    if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
 
-local jobId = game.JobId
-if not jobId or jobId == "" then return end
+    local jobId = game.JobId
+    if not jobId or jobId == "" then return end
 
-local lowerJobId = jobId:lower()
-if lowerJobId:find("priv") or lowerJobId:find("reserved") or lowerJobId:find("vip") then return end
+    local lowerJobId = jobId:lower()
+    if lowerJobId:find("priv") or lowerJobId:find("reserved") or lowerJobId:find("vip") then return end
 
--- Optional: Detect reserved servers more accurately via player count mismatch
-if #Players:GetPlayers() == 1 then
-    local success, result = pcall(function()
-        return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
-    end)
-    if not success or not result or result.InstanceId ~= jobId then
-        return
+    if #Players:GetPlayers() == 1 then
+        local success, result = pcall(function()
+            return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
+        end)
+        if not success or not result or result.InstanceId ~= jobId then
+            return
+        end
     end
-end
 
     local playerCount = getPlayerCount()
-    if playerCount < 4 or playerCount > 7 then return end
+    if playerCount < 5 or playerCount > 7 then return end
 
     local placeId = tostring(game.PlaceId)
-    local jobId   = game.JobId
     if not placeId or placeId == "" then return end
     if not jobId   or jobId   == "" then return end
     if not modelName or modelName == "" then return end
@@ -2472,29 +2481,40 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     end
 
     if specialForThirdWebhook[modelName] then
-        pcall(function()
-            req({
-                Url     = midWebhookUrl,
-                Method  = "POST",
-                Headers = headers,
-                Body    = jsonData
-            })
-        end)
+        local enoughTimePassed = false
+        for _, player in ipairs(Players:GetPlayers()) do
+            local joinTime = playerJoinTimes[player.UserId]
+            if joinTime and (tick() - joinTime) >= 30 then
+                enoughTimePassed = true
+                break
+            end
+        end
 
-        pcall(function()
-            req({
-                Url     = extraWebhookUrl,
-                Method  = "POST",
-                Headers = headers,
-                Body    = jsonData
-            })
-        end)
+        if enoughTimePassed then
+            pcall(function()
+                req({
+                    Url     = midWebhookUrl,
+                    Method  = "POST",
+                    Headers = headers,
+                    Body    = jsonData
+                })
+            end)
+
+            pcall(function()
+                req({
+                    Url     = extraWebhookUrl,
+                    Method  = "POST",
+                    Headers = headers,
+                    Body    = jsonData
+                })
+            end)
+        end
     end
 end
 
 local function checkBrainrots()
     local players = Players:GetPlayers()
-    if #players < 4 or #players > 7 then return end
+    if #players < 5 or #players > 7 then return end
 
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
@@ -2515,7 +2535,7 @@ local function checkBrainrots()
                         mutation = "🌈 Rainbow"
                     end
 
-                    local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 6) or "N/A"
+                    local money = findNearbyMoneyText(root.Position + Vector3.new(0, 2, 0), 8) or "N/A"
                     sendNotification(model.Name, mutation, money)
                     notified[id] = true
                 end
