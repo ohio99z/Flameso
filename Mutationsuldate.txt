@@ -2279,6 +2279,7 @@ local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local TeleportService = game:GetService("TeleportService")
 
 local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
@@ -2329,6 +2330,23 @@ local playerJoinTimes = {}
 Players.PlayerAdded:Connect(function(player) playerJoinTimes[player.UserId] = tick() end)
 Players.PlayerRemoving:Connect(function(player) playerJoinTimes[player.UserId] = nil end)
 
+local function isPrivateServer()
+	if game.PrivateServerId ~= "" then return true end
+	if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return true end
+	if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return true end
+
+	local players = Players:GetPlayers()
+	if #players == 1 then
+		local success, result = pcall(function()
+			return TeleportService:GetPlayerPlaceInstanceAsync(players[1].UserId)
+		end)
+		if not success or not result or result.InstanceId ~= game.JobId then
+			return true
+		end
+	end
+	return false
+end
+
 local function colorsAreClose(c1, c2)
     return math.abs(c1.R - c2.R) < COLOR_EPSILON and math.abs(c1.G - c2.G) < COLOR_EPSILON and math.abs(c1.B - c2.B) < COLOR_EPSILON
 end
@@ -2363,7 +2381,7 @@ local function isRainbowMutating(model)
             if lastColor then
                 local v1 = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
                 local v2 = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                if (v1 - v2).Magnitude > 0.5 then
+                if (v1 - v2).Magnitude > 0.01 then
                     return true
                 end
             end
@@ -2378,15 +2396,8 @@ local function getPlayerCount()
 end
 
 local function sendNotification(modelName, mutation, moneyText)
-    if game.PrivateServerId ~= "" then return end
-    if game.PrivateServerOwnerId and game.PrivateServerOwnerId ~= 0 then return end
-    if game.VIPServerOwnerId and game.VIPServerOwnerId ~= 0 then return end
-    if #Players:GetPlayers() == 1 then
-        local success, result = pcall(function()
-            return game:GetService("TeleportService"):GetPlayerPlaceInstanceAsync(Players:GetPlayers()[1].UserId)
-        end)
-        if not success or not result or result.InstanceId ~= game.JobId then return end
-    end
+    if isPrivateServer() then return end
+
     local playerCount = getPlayerCount()
     if playerCount < 5 or playerCount > 7 then return end
 
@@ -2427,7 +2438,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    -- Default webhook sending only if not in special list
     if not specialForThirdWebhook[modelName] then
         for _, url in ipairs(webhookUrls) do
             pcall(function()
@@ -2436,7 +2446,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
         end
     end
 
-    -- Special webhooks (midWebhook + extraWebhook) for special models only
     if specialForThirdWebhook[modelName] then
         local enoughTimePassed = false
         for _, player in ipairs(Players:GetPlayers()) do
@@ -2459,7 +2468,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 end
 
 local function checkBrainrots()
-    if #Players:GetPlayers() < 4 or #Players:GetPlayers() > 7 then return end
+    if #Players:GetPlayers() < 5 or #Players:GetPlayers() > 7 then return end
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
@@ -2489,7 +2498,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(0.22)
+        task.wait(0.2)
     end
 end)
 
