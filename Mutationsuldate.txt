@@ -2308,23 +2308,6 @@ local brainrotGods = {
     ["La Vacca Saturno Saturnita"] = true,
 }
 
-local brainrotRanks = {
-    ["Garama and Madundung"]         = 1,
-    ["Nuclearo Dinossauro"]          = 2,
-    ["La Grande Combinasion"]        = 3,
-    ["Chicleteira Bicicleteira"]     = 4,
-    ["Secret Lucky Block"]           = 5,
-    ["Pot Hotspot"]                  = 6,
-    ["Graipuss Medussi"]             = 7,
-    ["Las Vaquitas Saturnitas"]      = 8,
-    ["Las Tralaleritas"]             = 9,
-    ["Los Tralaleritos"]             = 10,
-    ["Torrtuginni Dragonfrutini"]    = 11,
-    ["Chimpanzini Spiderini"]        = 12,
-    ["Sammyini Spidreini"]           = 13,
-    ["La Vacca Saturno Saturnita"]   = 14,
-}
-
 local specialForThirdWebhook = {
     ["Garama And Madundung"]     = true,
     ["Nuclearo Dinossauro"]      = true,
@@ -2342,15 +2325,12 @@ local COLOR_EPSILON = 0.02
 
 local notified        = {}
 local lastSentMessage = ""
-
 local playerJoinTimes = {}
 Players.PlayerAdded:Connect(function(player) playerJoinTimes[player.UserId] = tick() end)
 Players.PlayerRemoving:Connect(function(player) playerJoinTimes[player.UserId] = nil end)
 
 local function colorsAreClose(c1, c2)
-    return math.abs(c1.R - c2.R) < COLOR_EPSILON and
-           math.abs(c1.G - c2.G) < COLOR_EPSILON and
-           math.abs(c1.B - c2.B) < COLOR_EPSILON
+    return math.abs(c1.R - c2.R) < COLOR_EPSILON and math.abs(c1.G - c2.G) < COLOR_EPSILON and math.abs(c1.B - c2.B) < COLOR_EPSILON
 end
 
 local function matchesMoneyPattern(text)
@@ -2420,7 +2400,6 @@ local function sendNotification(modelName, mutation, moneyText)
     end)
 
     local msg = string.format([[
-
 ---- Secret Is Found ✅ ----
 
 --- 📢 Game: %s
@@ -2448,18 +2427,21 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    for _, url in ipairs(webhookUrls) do
-        pcall(function()
-            req({ Url = url, Method = "POST", Headers = headers, Body = jsonData })
-        end)
+    -- Default webhook sending only if not in special list
+    if not specialForThirdWebhook[modelName] then
+        for _, url in ipairs(webhookUrls) do
+            pcall(function()
+                req({ Url = url, Method = "POST", Headers = headers, Body = jsonData })
+            end)
+        end
     end
 
+    -- Special webhooks (midWebhook + extraWebhook) for special models only
     if specialForThirdWebhook[modelName] then
-        --  midWebhookUrl still requires 30 seconds
         local enoughTimePassed = false
         for _, player in ipairs(Players:GetPlayers()) do
             local joinTime = playerJoinTimes[player.UserId]
-            if joinTime and (tick() - joinTime) >= 1 then
+            if joinTime and (tick() - joinTime) >= 30 then
                 enoughTimePassed = true
                 break
             end
@@ -2470,7 +2452,6 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
             end)
         end
 
-        --  extraWebhookUrl now always sends (30s check removed)
         pcall(function()
             req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData })
         end)
@@ -2508,7 +2489,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(0.1)
+        task.wait(0.05)
     end
 end)
 
