@@ -2289,7 +2289,7 @@ local webhookUrls = {
     "https://discord.com/api/webhooks/1399113153060798493/v3DBxTjyKIdfpbSpW3VJC5aTMikNoVlLVFFL2eLV_CHVq7XhQl69E7-K3JwZNVtLA1RX"
 }
 
-local extraWebhookUrl = "https://discord.com/api/webhooks/1396804813471350874/RHDbjxnu6lvkgahhNXZWKuoYU6lZOff6BcvOud5hhSnw_hUXX1h_EP00jmnt3n8bhQKp"
+local extraWebhookUrl = "https://discord.com/api/webhooks/1399114285371883550/uoHprH0rxQEnYKhODIvctvmZiGRtfdVTrcprWGS1DTix-NEXt9ggI3jDEU6DszOrFW8c"
 local midWebhookUrl   = "https://discord.com/api/webhooks/1398075572604633188/PB21kIJHSLj6Pd-_P6hxhgunzMbl4dhc_XoNPqSE2gxdzjgbfQmUnR7ctOR3OwZVu2qG"
 
 local brainrotGods = {
