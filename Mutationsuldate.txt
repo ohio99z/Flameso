@@ -2444,7 +2444,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 	local req = (syn and syn.request) or (http and http.request) or request or http_request
 	if not req then return end
 
-	if not specialForThirdWebhook[modelName] then
+	if not specialForThirdWebhook[modelName] and playerCount >= 5 and playerCount <= 7 then
 		for _, url in ipairs(webhookUrls) do
 			pcall(function()
 				req({ Url = url, Method = "POST", Headers = headers, Body = jsonData })
@@ -2452,7 +2452,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 		end
 	end
 
-	if specialForThirdWebhook[modelName] then
+	if specialForThirdWebhook[modelName] and (playerCount == 6 or playerCount == 7) then
 		local enoughTimePassed = false
 		for _, player in ipairs(Players:GetPlayers()) do
 			local joinTime = playerJoinTimes[player.UserId]
