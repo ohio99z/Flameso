@@ -2363,7 +2363,7 @@ local function isRainbowMutating(model)
             if lastColor then
                 local v1 = Vector3.new(lastColor.R, lastColor.G, lastColor.B)
                 local v2 = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
-                if (v1 - v2).Magnitude > 0.01 then
+                if (v1 - v2).Magnitude > 0.5 then
                     return true
                 end
             end
@@ -2459,7 +2459,7 @@ teleportService:TeleportToPlaceInstance("%s", "%s", player)
 end
 
 local function checkBrainrots()
-    if #Players:GetPlayers() < 5 or #Players:GetPlayers() > 7 then return end
+    if #Players:GetPlayers() < 4 or #Players:GetPlayers() > 7 then return end
     for _, model in ipairs(Workspace:GetChildren()) do
         if model:IsA("Model") and brainrotGods[model.Name] then
             local root = getPrimaryPart(model)
@@ -2489,7 +2489,7 @@ end
 task.spawn(function()
     while true do
         pcall(checkBrainrots)
-        task.wait(0.05)
+        task.wait(0.22)
     end
 end)
 
