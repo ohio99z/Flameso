@@ -1475,7 +1475,7 @@ end)
 
 -- ðŸ”˜ Toggle to control the Leave GUI
 UtilsTab:CreateToggle({
-	Name = "Toggle Leave GUI",
+	Name = "🚪Toggle Leave GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		leaveGui.Enabled = state
@@ -1654,7 +1654,7 @@ end)
 
 -- Rayfield toggle just shows/hides the custom GUI
 UtilsTab:CreateToggle({
-    Name = "Server Hop GUI",
+    Name = "🐇Server Hop GUI",
     CurrentValue = false,
     Flag = "ServerHopGUIToggle",
     Callback = function(value)
