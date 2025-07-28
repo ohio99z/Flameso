@@ -1449,6 +1449,33 @@ EspTab:CreateToggle({
 
 local UtilsTab = Window:CreateTab("🛠️ Utils", 6034818371)
 
+local vu = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local antiAfkConnection = nil
+
+UtilsTab:CreateToggle({
+	Name = "🛡️ Anti-AFK",
+	CurrentValue = false,
+	Callback = function(enabled)
+		if enabled then
+			if not antiAfkConnection then
+				antiAfkConnection = player.Idled:Connect(function()
+					vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+					wait(1)
+					vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+				end)
+			end
+		else
+			if antiAfkConnection then
+				antiAfkConnection:Disconnect()
+				antiAfkConnection = nil
+			end
+		end
+	end
+})
+
 -- ðŸŸ¥ Then add the rest (GUI logic, etc.)
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
