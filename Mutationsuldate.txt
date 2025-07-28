@@ -501,6 +501,219 @@ MainTab:CreateToggle({
 	end
 })
 
+local function runAntiHitScript()
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local localPlayer = Players.LocalPlayer
+
+    local text = {
+        title = "Anti Hit System",
+        statusOn = "Anti Hit active for {time}s",
+        statusOff = "Use before steal",
+        toggleOn = "Enable",
+        close = "X",
+    }
+
+    -- Remove existing GUI if present
+    local existingGui = localPlayer:FindFirstChild("PlayerGui"):FindFirstChild("AntiHitSystemGui")
+    if existingGui then existingGui:Destroy() end
+
+    -- Create AntiHit GUI
+    local AntiHitGui = Instance.new("ScreenGui")
+    AntiHitGui.Name = "AntiHitSystemGui"
+    AntiHitGui.ResetOnSpawn = false
+    AntiHitGui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(0, 220, 0, 90)
+    Frame.Position = UDim2.new(0, 20, 0.8, 0)
+    Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Frame.BorderSizePixel = 0
+    Frame.AnchorPoint = Vector2.new(0, 1)
+    Frame.Parent = AntiHitGui
+    Frame.Active = true
+    Frame.Draggable = true
+
+    local UIStroke = Instance.new("UIStroke", Frame)
+    UIStroke.Color = Color3.fromRGB(100, 100, 100)
+    UIStroke.Thickness = 1
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, 0, 0, 25)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 18
+    TitleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    TitleLabel.Text = text.title
+    TitleLabel.Parent = Frame
+
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Position = UDim2.new(0, 10, 0, 35)
+    StatusLabel.Size = UDim2.new(1, -20, 0, 30)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.TextSize = 16
+    StatusLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+    StatusLabel.TextWrapped = true
+    StatusLabel.Text = text.statusOff
+    StatusLabel.Parent = Frame
+
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Position = UDim2.new(0, 10, 0, 70)
+    ToggleButton.Size = UDim2.new(1, -20, 0, 20)
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.Font = Enum.Font.GothamBold
+    ToggleButton.TextSize = 16
+    ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleButton.Text = text.toggleOn
+    ToggleButton.Parent = Frame
+
+    local function buyWebSlinger()
+        local remoteFunction = ReplicatedStorage.Packages.Net:FindFirstChild("RF/CoinsShopService/RequestBuy")
+        if remoteFunction then
+            local success, err = pcall(function()
+                remoteFunction:InvokeServer("Web Slinger")
+            end)
+            if not success then
+                warn("Failed to buy Web Slinger:", err)
+            end
+        else
+            warn("RemoteFunction RF/CoinsShopService/RequestBuy not found")
+        end
+    end
+
+    local function equipToolByName(toolName)
+        local character = localPlayer.Character
+        local backpack = localPlayer:FindFirstChild("Backpack")
+        if not character or not backpack then return nil end
+
+        local tool = backpack:FindFirstChild(toolName) or character:FindFirstChild(toolName)
+        if not tool then return nil end
+
+        tool.Parent = character
+
+        local handle = tool:FindFirstChild("Handle")
+        if handle then
+            handle.Transparency = 0
+        end
+
+        return tool
+    end
+
+    local function unequipAllExcept(toolName)
+        local character = localPlayer.Character
+        local backpack = localPlayer:FindFirstChild("Backpack")
+        if not character or not backpack then return end
+
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:UnequipTools()
+        end
+
+        for _, tool in ipairs(character:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name ~= toolName then
+                tool.Parent = backpack
+            end
+        end
+    end
+
+    local function fireRemote(toolName)
+        unequipAllExcept(toolName)
+        local tool = equipToolByName(toolName)
+        if not tool then return end
+
+        task.wait(0.0065)
+
+        local character = localPlayer.Character
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        local arm = character and character:FindFirstChild("LeftLowerArm")
+        local handle = tool:FindFirstChild("Handle")
+
+        local remoteEvent = ReplicatedStorage.Packages.Net:FindFirstChild("RE/UseItem")
+        if arm and handle and remoteEvent then
+            remoteEvent:FireServer(character:GetPrimaryPartCFrame(), arm, handle)
+            task.delay(0.2, function()
+                if humanoid then humanoid.PlatformStand = false end
+                if rootPart then rootPart.Anchored = false end
+            end)
+        end
+    end
+
+    local toolName = nil
+    local countdownTask = nil
+
+    ToggleButton.MouseButton1Click:Connect(function()
+        if countdownTask then return end
+
+        fireRemote(toolName)
+
+        local total = 10
+        local start = os.clock()
+
+        countdownTask = task.spawn(function()
+            while true do
+                local timeLeft = math.max(0, total - (os.clock() - start))
+                StatusLabel.Text = text.statusOn:gsub("{time}", string.format("%.1f", timeLeft))
+                if timeLeft <= 0 then
+                    StatusLabel.Text = text.statusOff
+                    countdownTask = nil
+                    break
+                end
+                task.wait(0.1)
+            end
+        end)
+    end)
+
+    task.spawn(function()
+        while true do
+            local character = localPlayer.Character
+            local humanoid = character and character:FindFirstChildWhichIsA("Humanoid")
+            if humanoid and humanoid.WalkSpeed ~= 50 then
+                humanoid.WalkSpeed = 50
+            end
+            task.wait(0.1)
+        end
+    end)
+
+    local function resetGuiTexts()
+        TitleLabel.Text = text.title
+        StatusLabel.Text = text.statusOff
+        ToggleButton.Text = text.toggleOn
+    end
+
+    localPlayer.CharacterAdded:Connect(function()
+        task.wait(2)
+        resetGuiTexts()
+    end)
+
+    buyWebSlinger()
+
+    local tries = 0
+    repeat
+        tries = tries + 1
+        task.wait(0.5)
+        local tool = localPlayer.Backpack:FindFirstChild("Web Slinger") or (localPlayer.Character and localPlayer.Character:FindFirstChild("Web Slinger"))
+        if tool then
+            toolName = tool.Name
+            break
+        end
+    until tries > 10
+
+    if not toolName then
+        warn("Web Slinger tool not found after purchase!")
+    end
+end
+
+-- Now create your Rayfield button exactly as you wanted:
+
+MainTab:CreateButton({
+    Name = "🤺 Activate Anti Hit System",
+    Callback = function()
+        runAntiHitScript()
+    end
+})
 
 -- Main heartbeat loop (runs each frame)
 RunService.Heartbeat:Connect(function()
