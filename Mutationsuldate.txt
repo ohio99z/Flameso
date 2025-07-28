@@ -1519,7 +1519,7 @@ end)
 
 -- Add toggle to UtilsTab to show/hide the Rejoin GUI
 UtilsTab:CreateToggle({
-	Name = "Toggle Rejoin GUI",
+	Name = "⚡️ Toggle Rejoin GUI",
 	CurrentValue = false,
 	Callback = function(state)
 		rejoinGui.Enabled = state
