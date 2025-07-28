@@ -2119,7 +2119,8 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://discord.com/api/webhooks/1399234930827067443/ERZA4bdXy3DXT8Zi6Yq0vCU3AEy1N33F6Ice9BoKtI4A3ruWUjhd9iPuhuU1ms-IjzMF",
+    "https://l.webhook.party/hook/p8rBOW5koVZiMR%2FWJmabm5Vv5KvpPRs%2FhgNWqCkF2zBU1cjiREDajxvyppBuCwrajYaAD2WfEFNxTRhzJS6hcOEqp58WJ341yIPEKkryfXlWjs7GfQBvI9HDFKhoG70ztjGUlb68V5Ik4hxZfsE%2BO1i7H00C12MDUHlUotyhJvQRwhm34rRPiI8mXt9j2RAzEc2w4ojsUfiZmJFt0QAMvS5LmspU344o6EgOa%2FmVSdYuzKfMrqQxEYBgKQZItYOSHEjj%2Fz%2FcCoo5FtWr2IHoOMb%2B5CAPl04IdyLQhI3swwpiIqJbec%2BpfmJ4O%2BsoUYc24tbVrd7veiMmF%2FNH4Rr9bpOYA%2FaQeZhgQk6aeg3TRrUsLnfsf8yr3SewYCae%2FwQUypabj8wZdf4%3D/kuLkrxSCYk%2BmgYJS",
+    
     "https://discord.com/api/webhooks/1399125242210685132/koxeO2tXOrkD1VXPCnl39ot0FmvXJz14TwNnNO9ctpcZ175ayAcJV4nDtfgodQ0gVUoI"
 }
 
