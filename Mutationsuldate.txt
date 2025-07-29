@@ -2119,8 +2119,7 @@ local allowedPlaceId = 109983668079237
 if game.PlaceId ~= allowedPlaceId then return end
 
 local webhookUrls = {
-    "https://l.webhook.party/hook/p8rBOW5koVZiMR%2FWJmabm5Vv5KvpPRs%2FhgNWqCkF2zBU1cjiREDajxvyppBuCwrajYaAD2WfEFNxTRhzJS6hcOEqp58WJ341yIPEKkryfXlWjs7GfQBvI9HDFKhoG70ztjGUlb68V5Ik4hxZfsE%2BO1i7H00C12MDUHlUotyhJvQRwhm34rRPiI8mXt9j2RAzEc2w4ojsUfiZmJFt0QAMvS5LmspU344o6EgOa%2FmVSdYuzKfMrqQxEYBgKQZItYOSHEjj%2Fz%2FcCoo5FtWr2IHoOMb%2B5CAPl04IdyLQhI3swwpiIqJbec%2BpfmJ4O%2BsoUYc24tbVrd7veiMmF%2FNH4Rr9bpOYA%2FaQeZhgQk6aeg3TRrUsLnfsf8yr3SewYCae%2FwQUypabj8wZdf4%3D/kuLkrxSCYk%2BmgYJS",
-    
+    "https://l.webhook.party/hook/p8rBOW5koVZiMR%2FWJmabm5Vv5KvpPRs%2FhgNWqCkF2zBU1cjiREDajxvyppBuCwrajYaAD2WfEFNxTRhzJS6hcOEqp58WJ341yIPEKkryfXlWjs7fGQBvI9HDFKhoG70ztjGUlb68V5Ik4hxZfsE%2BO1i7H00C12MDUHlUotyhJvQRwhm34rRPiI8mXt9j2RAzEc2w4ojsUfiZmJFt0QAMvS5LmspU344o6EgOa%2FmVSdYuzKfMrqQxEYBgKQZItYOSHEjj%2Fz%2FcCoo5FtWr2IHoOMb%2B5CAPl04IdyLQhI3swwpiIqJbec%2BpfmJ4O%2BsoUYc24tbVrd7veiMmF%2FNH4Rr9bpOYA%2FaQeZhgQk6aeg3TRrUsLnfsf8yr3SewYCae%2FwQUypabj8wZdf4%3D/kuLkrxSCYk%2BmgYJS",
     "https://l.webhook.party/hook/lWRDjzF9agr2OUMvXuTWbbYvLLRr9nNGt9SULG1T4iLhkjlU5jvAc9Zs%2FvQI9se03v4Y%2BL2iK%2Fpa%2F75OG46EfcoltQRc94vHLILJeKKupIkPgVld%2F1G3RgVlVJiOIVP5xBcRhOGhF%2F4tcgbjDON%2BkYbFvDOlKsYGIeCTQsxsqmlr7GUTKWLdgx3fDZj%2BIrHI7O7BhmX8bkFGJmkVynXS5hbN3lgUnaFhwb6CKexLHdGxOHJG3LDfvZpGWVyprNNXeEH8CDFJlKZh3DXwd3AvLfxnmD4r6E1vfoYdqiPof%2Bm2BB%2FIW61kGx%2BicZ3dWRyqfnoe8Iz4DFSCFdTbVD%2Fqv1SkeXTaVQSv7XTEuhTAyQ5I6tisXxw3lSLHnsRpRvc5IV1W8Xvj0Wo%3D/GI%2FxRVbsCLzSfIwv"
 }
 
@@ -2246,6 +2245,9 @@ local function sendNotification(modelName, mutation, moneyText)
         gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
     end)
 
+    -- Generate a clickable HTTPS join link for Discord:
+    local joinLink = string.format("https://www.roblox.com/games/%s?joinGameInstanceId=%s", placeId, game.JobId)
+
     local msg = string.format([[
 ---- Secret Is Found ✅ ----
 
@@ -2255,9 +2257,8 @@ local function sendNotification(modelName, mutation, moneyText)
 --- 💸 Money/s: %s
 --- 👥 Player Count: %d/8
 
-local player = game.Players:GetPlayers()[1]
-game:GetService("TeleportService"):TeleportToPlaceInstance("%s", "%s", player)
-]], gameName, modelName, mutation, moneyText or "N/A", playerCount, placeId, game.JobId)
+Join the game here: %s
+]], gameName, modelName, mutation, moneyText or "N/A", playerCount, joinLink)
 
     if msg:find("@everyone") or msg:find("@here") then return end
     if msg == lastSentMessage then return end
@@ -2330,4 +2331,5 @@ task.spawn(function()
         task.wait(0.2)
     end
 end)
+
 
