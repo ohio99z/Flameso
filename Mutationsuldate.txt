@@ -2277,11 +2277,10 @@ game:GetService("TeleportService"):TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
+    -- Send brainrot notifications ONLY to main webhook URLs (skip mid and extra)
     for _, url in ipairs(webhookUrls) do
         pcall(function() req({ Url = url, Method = "POST", Headers = headers, Body = jsonData }) end)
     end
-    pcall(function() req({ Url = midWebhookUrl, Method = "POST", Headers = headers, Body = jsonData }) end)
-    pcall(function() req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData }) end)
 end
 
 local function checkBrainrots()
@@ -2313,6 +2312,4 @@ task.spawn(function()
         task.wait(0.2)
     end
 end)
-
-
 
