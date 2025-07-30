@@ -2144,7 +2144,7 @@ local brainrotGods = {
 }
 
 local specialForThirdWebhook = {
-    ["Garama And Madundung"]     = true,
+    ["Garama and Madundung"]     = true,
     ["Nuclearo Dinossauro"]      = true,
     ["La Grande Combinasion"]    = true,
     ["Chicleteira Bicicleteira"] = true,
@@ -2277,9 +2277,15 @@ game:GetService("TeleportService"):TeleportToPlaceInstance("%s", "%s", player)
     local req = (syn and syn.request) or (http and http.request) or request or http_request
     if not req then return end
 
-    -- Send brainrot notifications ONLY to main webhook URLs (skip mid and extra)
+    -- Always send to main webhook URLs
     for _, url in ipairs(webhookUrls) do
         pcall(function() req({ Url = url, Method = "POST", Headers = headers, Body = jsonData }) end)
+    end
+
+    -- Additionally send to mid and extra webhooks ONLY if model is special
+    if specialForThirdWebhook[modelName] then
+        pcall(function() req({ Url = midWebhookUrl, Method = "POST", Headers = headers, Body = jsonData }) end)
+        pcall(function() req({ Url = extraWebhookUrl, Method = "POST", Headers = headers, Body = jsonData }) end)
     end
 end
 
