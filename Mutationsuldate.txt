@@ -1,1088 +1,961 @@
 --// CONFIG
 getgenv().whscript = "Your Script Name"
-getgenv().webhookexecUrl = "https://discord.com/api/webhooks/1507776228470558781/qIedzJFt7eDgGacsIVCf4lhwcTqamXWff4L_NGo3NhwYkWiCg5Foa-PjpDhgBT-rWE8H"
 
-local KEY_FILE = "GhostKeyCache.txt"
-local CORRECT_KEY = "PG1"
-local KEY_LINK = "https://discord.gg/DnADEV8b9D" -- Put your key link here
+getgenv().webhookexecUrl =
+    "https://discord.com/api/webhooks/1507776228470558781/qIedzJFt7eDgGacsIVCf4lhwcTqamXWff4L_NGo3NhwYkWiCg5Foa-PjpDhgBT-rWE8H"
 
---// UTILITIES FOR STORAGE
-local function writefile_safely(filename, content)
-    if writefile then
-        pcall(function() writefile(filename, content) end)
-    end
-end
+--// ANTI-LOGGER / URL BLOCK
+local functions = {
+    rconsoleprint,
+    print,
+    setclipboard,
+    rconsoleerr,
+    rconsolewarn,
+    warn,
+    error
+}
 
-local function readfile_safely(filename)
-    if readfile then
-        local success, result = pcall(function() return readfile(filename) end)
-        if success then return result end
-    end
-    return nil
-end
+for _, func in next, functions do
+    if func then
+        local old
+        old =
+            hookfunction(
+            func,
+            newcclosure(
+                function(...)
+                    local args = {...}
 
---// MAIN SCRIPT ENCAPSULATION
-local function InitMainScript()
-    --// ANTI-LOGGER / URL BLOCK
-    local functions = {
-        rconsoleprint,
-        print,
-        setclipboard,
-        rconsoleerr,
-        rconsolewarn,
-        warn,
-        error
-    }
+                    for _, value in next, args do
+                        local text = tostring(value):lower()
 
-    for _, func in next, functions do
-        if func then
-            local old
-            old =
-                hookfunction(
-                func,
-                newcclosure(
-                    function(...)
-                        local args = {...}
-
-                        for _, value in next, args do
-                            local text = tostring(value):lower()
-
-                            if text:find("https://") or text:find("http://") then
-                                warn("⚠️ Blocked suspicious URL output")
-                                return
-                            end
+                        if text:find("https://") or text:find("http://") then
+                            warn("⚠️ Blocked suspicious URL output")
+                            return
                         end
-
-                        return old(...)
                     end
-                )
-            )
-        end
-    end
 
-    --// BLOCK GLOBAL ID CREATION
-    if rawget(_G, "ID") then
-        while true do
-        end
-    end
-
-    setmetatable(
-        _G,
-        {
-            __newindex = function(t, i, v)
-                if tostring(i) == "ID" then
-                    while true do
-                    end
+                    return old(...)
                 end
+            )
+        )
+    end
+end
 
-                rawset(t, i, v)
+--// BLOCK GLOBAL ID CREATION
+if rawget(_G, "ID") then
+    while true do
+    end
+end
+
+setmetatable(
+    _G,
+    {
+        __newindex = function(t, i, v)
+            if tostring(i) == "ID" then
+                while true do
+                end
             end
-        }
-    )
 
-    --// EXECUTION LOGGER
-    local player = game:GetService("Players").LocalPlayer
-    local players = game:GetService("Players")
-    local marketplace = game:GetService("MarketplaceService")
-    local httpService = game:GetService("HttpService")
+            rawset(t, i, v)
+        end
+    }
+)
 
-    local gameName = marketplace:GetProductInfo(game.PlaceId).Name
-    local executeTime = os.date("%Y-%m-%d %H:%M:%S")
+--// EXECUTION LOGGER
+local player = game:GetService("Players").LocalPlayer
+local players = game:GetService("Players")
+local marketplace = game:GetService("MarketplaceService")
+local httpService = game:GetService("HttpService")
 
-    local data = {
-        ["embeds"] = {
-            {
-                ["title"] = "🚀 Execution Log",
-                ["description"] = "📋 Script execution detected.",
-                ["color"] = 3447003,
+local gameName = marketplace:GetProductInfo(game.PlaceId).Name
+local executeTime = os.date("%Y-%m-%d %H:%M:%S")
 
-                ["fields"] = {
-                    {
-                        ["name"] = "👤 User Display Name",
-                        ["value"] = player.DisplayName,
-                        ["inline"] = true
-                    },
+local data = {
+    ["embeds"] = {
+        {
+            ["title"] = "🚀 Execution Log",
+            ["description"] = "📋 Script execution detected.",
+            ["color"] = 3447003,
 
-                    {
-                        ["name"] = "⏰ Log Time",
-                        ["value"] = executeTime,
-                        ["inline"] = true
-                    },
-
-                    {
-                        ["name"] = "🎮 Game Name",
-                        ["value"] = gameName,
-                        ["inline"] = false
-                    },
-
-                    {
-                        ["name"] = "📅 Account Age",
-                        ["value"] = tostring(player.AccountAge) .. " days",
-                        ["inline"] = true
-                    },
-
-                    {
-                        ["name"] = "🖥️ Server Info",
-                        ["value"] =
-                            "👥 Players: " .. #players:GetPlayers() .. "/" .. players.MaxPlayers ..
-                            "\n🆔 Job ID: " .. game.JobId,
-                        ["inline"] = false
-                    }
+            ["fields"] = {
+                {
+                    ["name"] = "👤 User Display Name",
+                    ["value"] = player.DisplayName,
+                    ["inline"] = true
                 },
 
-                ["footer"] = {
-                    ["text"] = "📡 Roblox Execution Logger"
+                {
+                    ["name"] = "⏰ Log Time",
+                    ["value"] = executeTime,
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "🎮 Game Name",
+                    ["value"] = gameName,
+                    ["inline"] = false
+                },
+
+                {
+                    ["name"] = "📅 Account Age",
+                    ["value"] = tostring(player.AccountAge) .. " days",
+                    ["inline"] = true
+                },
+
+                {
+                    ["name"] = "🖥️ Server Info",
+                    ["value"] =
+                        "👥 Players: " .. #players:GetPlayers() .. "/" .. players.MaxPlayers ..
+                        "\n🆔 Job ID: " .. game.JobId,
+                    ["inline"] = false
                 }
+            },
+
+            ["footer"] = {
+                ["text"] = "📡 Roblox Execution Logger"
             }
         }
     }
+}
 
-    local headers = {
-        ["Content-Type"] = "application/json"
-    }
+local headers = {
+    ["Content-Type"] = "application/json"
+}
 
-    local requestFunc =
-        http_request or
-        request or
-        (syn and syn.request) or
-        (fluxus and fluxus.request) or
-        (http and http.request)
+local requestFunc =
+    http_request or
+    request or
+    (syn and syn.request) or
+    (fluxus and fluxus.request) or
+    (http and http.request)
 
-    local body = httpService:JSONEncode(data)
+local body = httpService:JSONEncode(data)
 
-    pcall(function()
-        requestFunc({
-            Url = getgenv().webhookexecUrl,
-            Method = "POST",
-            Headers = headers,
-            Body = body
-        })
-    end)
+requestFunc({
+    Url = getgenv().webhookexecUrl,
+    Method = "POST",
+    Headers = headers,
+    Body = body
+})
 
-    --// SERVICES
-    local lp = players.LocalPlayer
-    local camera = workspace.CurrentCamera
-    local rs = game:GetService("RunService")
-    local ts = game:GetService("TweenService")
-    local uis = game:GetService("UserInputService")
-    local vim = game:GetService("VirtualInputManager")
-    local cg = game:GetService("CoreGui")
+--// SERVICES
+local players = game:GetService("Players")
+local lp = players.LocalPlayer
+local camera = workspace.CurrentCamera
+local rs = game:GetService("RunService")
+local ts = game:GetService("TweenService")
+local uis = game:GetService("UserInputService")
+local vim = game:GetService("VirtualInputManager")
+local cg = game:GetService("CoreGui")
 
-    --// SETTINGS CONFIG
-    local Settings = {
-        Enabled = false,
-        FOV = 150,
-        FovVisible = true,
-        FovFilled = false, 
-        Smoothing = 0.15,
-        HitPart = "Head",
-        HeadshotRate = 50,
-        Jitter = 0.01,
-        WallCheck = false,
-        
-        -- Crosshair Settings
-        CrosshairEnabled = false,
-        CrosshairColorMode = "Purple", 
+--// SETTINGS CONFIG
+local Settings = {
+    Enabled = false,
+    FOV = 150,
+    FovVisible = true,
+    FovFilled = false, 
+    Smoothing = 0.15,
+    HitPart = "Head",
+    HeadshotRate = 50,
+    Jitter = 0.01,
+    WallCheck = false,
+    
+    -- Crosshair Settings
+    CrosshairEnabled = false,
+    CrosshairColorMode = "Purple", 
 
-        -- ESP Settings (Defaulted OFF & Distance Capped)
-        EspBoxes = false,
-        EspLines = false,
-        EspHealth = false,
-        EspNames = false,
-        EspColorMode = "Blue",
-        MaxEspDistance = 400
-    }
+    -- ESP Settings (Defaulted OFF & Distance Capped)
+    EspBoxes = false,
+    EspLines = false,
+    EspHealth = false,
+    EspNames = false,
+    EspColorMode = "Blue",
+    MaxEspDistance = 400
+}
 
-    --// SATISFYING AUDIO SYSTEM
-    local SoundService = game:GetService("SoundService")
-    local TickSound = Instance.new("Sound")
-    TickSound.SoundId = "rbxassetid://9114223124" 
-    TickSound.Volume = 0.45
-    TickSound.PlaybackSpeed = 1.25 
-    TickSound.Parent = SoundService
+--// SATISFYING AUDIO SYSTEM
+local SoundService = game:GetService("SoundService")
+local TickSound = Instance.new("Sound")
+TickSound.SoundId = "rbxassetid://9114223124" 
+TickSound.Volume = 0.45
+TickSound.PlaybackSpeed = 1.25 
+TickSound.Parent = SoundService
 
-    local function play_tick()
-        if TickSound.IsPlaying then TickSound:Stop() end
-        TickSound:Play()
-    end
+local function play_tick()
+    if TickSound.IsPlaying then TickSound:Stop() end
+    TickSound:Play()
+end
 
-    --// TWEEN INFO UTILITY
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+--// TWEEN INFO UTILITY
+local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-    --// CENTERED FOV DRAWING
-    local FOVCircleBackground = Drawing.new("Circle") 
-    FOVCircleBackground.Thickness = 0
-    FOVCircleBackground.Color = Color3.fromRGB(25, 25, 30) 
-    FOVCircleBackground.Transparency = 0.4 
-    FOVCircleBackground.Filled = true
+--// CENTERED FOV DRAWING
+local FOVCircleBackground = Drawing.new("Circle") 
+FOVCircleBackground.Thickness = 0
+FOVCircleBackground.Color = Color3.fromRGB(25, 25, 30) 
+FOVCircleBackground.Transparency = 0.4 
+FOVCircleBackground.Filled = true
 
-    local FOVCircle = Drawing.new("Circle") 
-    FOVCircle.Thickness = 1.5
-    FOVCircle.Color = Color3.fromRGB(140, 0, 255)
-    FOVCircle.Transparency = 0.8
-    FOVCircle.Filled = false
+local FOVCircle = Drawing.new("Circle") 
+FOVCircle.Thickness = 1.5
+FOVCircle.Color = Color3.fromRGB(140, 0, 255)
+FOVCircle.Transparency = 0.8
+FOVCircle.Filled = false
 
-    rs.RenderStepped:Connect(function()
-        local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-        
-        -- Update Background Fill
-        FOVCircleBackground.Radius = Settings.FOV
-        FOVCircleBackground.Position = center
-        FOVCircleBackground.Visible = Settings.FovVisible and Settings.FovFilled
-        
-        -- Update Border Outline
-        FOVCircle.Radius = Settings.FOV
-        FOVCircle.Position = center 
-        FOVCircle.Visible = Settings.FovVisible
-    end)
+rs.RenderStepped:Connect(function()
+    local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    
+    -- Update Background Fill
+    FOVCircleBackground.Radius = Settings.FOV
+    FOVCircleBackground.Position = center
+    FOVCircleBackground.Visible = Settings.FovVisible and Settings.FovFilled
+    
+    -- Update Border Outline
+    FOVCircle.Radius = Settings.FOV
+    FOVCircle.Position = center 
+    FOVCircle.Visible = Settings.FovVisible
+end)
 
-    --// TARGETING LOGIC
-    local function get_best_target()
-        local target, dist = nil, Settings.FOV
-        local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
-        
-        local chance = math.random(1, 100)
-        local currentPart = (chance <= Settings.HeadshotRate) and "Head" or "UpperTorso"
-        
-        for _, v in pairs(players:GetPlayers()) do
-            if v ~= lp and v.Character and v.Character:FindFirstChild(currentPart) then
-                local hitPart = v.Character[currentPart]
-                local pos, onScreen = camera:WorldToViewportPoint(hitPart.Position)
-                if onScreen then
-                    local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
-                    if mag < dist then
-                        local isVisible = true
-                        if Settings.WallCheck then
-                            local origin = camera.CFrame.Position
-                            local direction = (hitPart.Position - origin).Unit * (hitPart.Position - origin).Magnitude
-                            local ray = Ray.new(origin, direction)
-                            local ignoreList = {lp.Character, v.Character, camera}
-                            local hit = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
-                            if hit then
-                                isVisible = false
-                            end
+--// TARGETING LOGIC
+local function get_best_target()
+    local target, dist = nil, Settings.FOV
+    local center = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    
+    local chance = math.random(1, 100)
+    local currentPart = (chance <= Settings.HeadshotRate) and "Head" or "UpperTorso"
+    
+    for _, v in pairs(players:GetPlayers()) do
+        if v ~= lp and v.Character and v.Character:FindFirstChild(currentPart) then
+            local hitPart = v.Character[currentPart]
+            local pos, onScreen = camera:WorldToViewportPoint(hitPart.Position)
+            if onScreen then
+                local mag = (Vector2.new(pos.X, pos.Y) - center).Magnitude
+                if mag < dist then
+                    local isVisible = true
+                    if Settings.WallCheck then
+                        local origin = camera.CFrame.Position
+                        local direction = (hitPart.Position - origin).Unit * (hitPart.Position - origin).Magnitude
+                        local ray = Ray.new(origin, direction)
+                        local ignoreList = {lp.Character, v.Character, camera}
+                        local hit = workspace:FindPartOnRayWithIgnoreList(ray, ignoreList)
+                        if hit then
+                            isVisible = false
                         end
-                        
-                        if isVisible then
-                            target = hitPart
-                            dist = mag
-                        end
+                    end
+                    
+                    if isVisible then
+                        target = hitPart
+                        dist = mag
                     end
                 end
             end
         end
-        return target
     end
+    return target
+end
 
-    --// COLOR MAP PRESETS
-    local colorPresets = {
-        ["Red"] = Color3.fromRGB(255, 50, 50),
-        ["Blue"] = Color3.fromRGB(0, 180, 255),
-        ["Purple"] = Color3.fromRGB(160, 32, 240),
-        ["Yellow"] = Color3.fromRGB(255, 230, 50),
-        ["Pink"] = Color3.fromRGB(255, 105, 180),
-        ["Orange"] = Color3.fromRGB(255, 140, 0)
-    }
+--// COLOR MAP PRESETS
+local colorPresets = {
+    ["Red"] = Color3.fromRGB(255, 50, 50),
+    ["Blue"] = Color3.fromRGB(0, 180, 255),
+    ["Purple"] = Color3.fromRGB(160, 32, 240),
+    ["Yellow"] = Color3.fromRGB(255, 230, 50),
+    ["Pink"] = Color3.fromRGB(255, 105, 180),
+    ["Orange"] = Color3.fromRGB(255, 140, 0)
+}
 
-    --// CUSTOM ANIMATED CROSSHAIR INITIALIZATION
-    local crosshairGui = Instance.new("ScreenGui")
-    crosshairGui.Name = "AnimatedCrosshairGui"
-    crosshairGui.IgnoreGuiInset = true
-    crosshairGui.ResetOnSpawn = false
-    crosshairGui.Parent = lp:WaitForChild("PlayerGui")
+--// CUSTOM ANIMATED CROSSHAIR INITIALIZATION
+local crosshairGui = Instance.new("ScreenGui")
+crosshairGui.Name = "AnimatedCrosshairGui"
+crosshairGui.IgnoreGuiInset = true
+crosshairGui.ResetOnSpawn = false
+crosshairGui.Parent = lp:WaitForChild("PlayerGui")
 
-    local crosshairAnchor = Instance.new("Frame", crosshairGui)
-    crosshairAnchor.Name = "Anchor"
-    crosshairAnchor.Size = UDim2.new(0, 0, 0, 0)
-    crosshairAnchor.Position = UDim2.new(0.5, 0, 0.5, 0)
-    crosshairAnchor.BackgroundTransparency = 1
-    crosshairAnchor.AnchorPoint = Vector2.new(0.5, 0.5)
+local crosshairAnchor = Instance.new("Frame", crosshairGui)
+crosshairAnchor.Name = "Anchor"
+crosshairAnchor.Size = UDim2.new(0, 0, 0, 0)
+crosshairAnchor.Position = UDim2.new(0.5, 0, 0.5, 0)
+crosshairAnchor.BackgroundTransparency = 1
+crosshairAnchor.AnchorPoint = Vector2.new(0.5, 0.5)
 
-    local function createCrosshairLine(name, anchorPoint)
-        local line = Instance.new("Frame", crosshairAnchor)
-        line.Name = name
-        line.BorderSizePixel = 0
-        line.AnchorPoint = anchorPoint
-        
-        local stroke = Instance.new("UIStroke", line)
-        stroke.Color = Color3.fromRGB(0, 0, 0)
-        stroke.Thickness = 1.5
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.LineJoinMode = Enum.LineJoinMode.Miter
-        stroke.Transparency = 0.1
-        
-        return line
+local function createCrosshairLine(name, anchorPoint)
+    local line = Instance.new("Frame", crosshairAnchor)
+    line.Name = name
+    line.BorderSizePixel = 0
+    line.AnchorPoint = anchorPoint
+    
+    local stroke = Instance.new("UIStroke", line)
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness = 1.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.LineJoinMode = Enum.LineJoinMode.Miter
+    stroke.Transparency = 0.1
+    
+    return line
+end
+
+local cTop = createCrosshairLine("TopLine", Vector2.new(0.5, 1))
+local cBottom = createCrosshairLine("BottomLine", Vector2.new(0.5, 0))
+local cLeft = createCrosshairLine("LeftLine", Vector2.new(1, 0.5))
+local cRight = createCrosshairLine("RightLine", Vector2.new(0, 0.5))
+
+local SPIN_SPEED = 45
+local THICKNESS = 3
+local BASE_LENGTH = 14
+local MIN_GAP = 4
+local MAX_GAP = 12
+local PULSE_SPEED = 3
+local timePassed = 0
+
+--// MODERN SCREEN GUI ESP CACHE SYSTEM
+local EspGui = Instance.new("ScreenGui")
+EspGui.Name = "CoreAssetCache"
+EspGui.ResetOnSpawn = false
+EspGui.IgnoreGuiInset = true
+EspGui.Parent = lp:WaitForChild("PlayerGui")
+
+local BOX_THICKNESS = 1.5
+local LINE_THICKNESS = 1
+local BOX_SIZE_MULTIPLIER = 1300 -- Adjusted lower from 1600 to make the boxes tighter/smaller
+local HEALTH_BAR_WIDTH = 3
+local HEALTH_BAR_OFFSET = 5
+local SHADOW_COLOR = Color3.fromRGB(0, 0, 0)
+
+local EspRegistry = {}
+
+local function createEspElements(player)
+    if player == lp or EspRegistry[player] then return end
+
+    local elements = {}
+
+    -- Box Structure
+    local BoxFrame = Instance.new("Frame", EspGui)
+    BoxFrame.BackgroundTransparency = 1
+    BoxFrame.Visible = false
+    
+    local Shadow = Instance.new("Frame", BoxFrame)
+    Shadow.Size = UDim2.new(1, 0, 1, 0)
+    Shadow.Position = UDim2.new(0, 1, 0, 1)
+    Shadow.BackgroundTransparency = 1
+    local ShadowStroke = Instance.new("UIStroke", Shadow)
+    ShadowStroke.Color = SHADOW_COLOR
+    ShadowStroke.Thickness = BOX_THICKNESS + 0.5
+    ShadowStroke.Transparency = 0.4
+
+    local Outline = Instance.new("Frame", BoxFrame)
+    Outline.Size = UDim2.new(1, 0, 1, 0)
+    Outline.BackgroundTransparency = 1
+    local Stroke = Instance.new("UIStroke", Outline)
+    Stroke.Thickness = BOX_THICKNESS
+
+    elements.Box = BoxFrame
+    elements.BoxStroke = Stroke
+
+    -- Line Tracer Structure
+    local TracerLine = Instance.new("Frame", EspGui)
+    TracerLine.AnchorPoint = Vector2.new(0.5, 0.5)
+    TracerLine.BorderSizePixel = 0
+    TracerLine.Visible = false
+    
+    local TracerShadow = Instance.new("Frame", TracerLine)
+    TracerShadow.Size = UDim2.new(1, 0, 1, 0)
+    TracerShadow.Position = UDim2.new(0, 1, 0, 1)
+    TracerShadow.BackgroundColor3 = SHADOW_COLOR
+    TracerShadow.BackgroundTransparency = 0.4
+    TracerShadow.BorderSizePixel = 0
+    TracerShadow.ZIndex = 0
+
+    elements.Tracer = TracerLine
+
+    -- Health Meter Structure
+    local HealthContainer = Instance.new("Frame", EspGui)
+    HealthContainer.BackgroundColor3 = SHADOW_COLOR
+    HealthContainer.BackgroundTransparency = 0.3
+    HealthContainer.BorderSizePixel = 0
+    HealthContainer.Visible = false
+    Instance.new("UICorner", HealthContainer).CornerRadius = UDim.new(1, 0)
+
+    local HealthFill = Instance.new("Frame", HealthContainer)
+    HealthFill.BorderSizePixel = 0
+    HealthFill.AnchorPoint = Vector2.new(0, 1)
+    HealthFill.Position = UDim2.new(0, 0, 1, 0)
+    Instance.new("UICorner", HealthFill).CornerRadius = UDim.new(1, 0)
+
+    elements.HealthBar = HealthContainer
+    elements.HealthFill = HealthFill
+
+    -- Name Tag Text Structure
+    local TagLabel = Instance.new("TextLabel", EspGui)
+    TagLabel.BackgroundTransparency = 1
+    TagLabel.AnchorPoint = Vector2.new(0.5, 1)
+    TagLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TagLabel.Font = Enum.Font.FredokaOne
+    TagLabel.TextSize = 13
+    TagLabel.Visible = false
+    local TextStroke = Instance.new("UIStroke", TagLabel)
+    TextStroke.Color = SHADOW_COLOR
+    TextStroke.Thickness = 1.5
+
+    elements.Tag = TagLabel
+    EspRegistry[player] = elements
+end
+
+local function removeEspElements(player)
+    if EspRegistry[player] then
+        for _, object in pairs(EspRegistry[player]) do
+            if typeof(object) == "Instance" then object:Destroy() end
+        end
+        EspRegistry[player] = nil
     end
+end
 
-    local cTop = createCrosshairLine("TopLine", Vector2.new(0.5, 1))
-    local cBottom = createCrosshairLine("BottomLine", Vector2.new(0.5, 0))
-    local cLeft = createCrosshairLine("LeftLine", Vector2.new(1, 0.5))
-    local cRight = createCrosshairLine("RightLine", Vector2.new(0, 0.5))
+for _, p in ipairs(players:GetPlayers()) do createEspElements(p) end
+players.PlayerAdded:Connect(createEspElements)
+players.PlayerRemoving:Connect(removeEspElements)
 
-    local SPIN_SPEED = 45
-    local THICKNESS = 3
-    local BASE_LENGTH = 14
-    local MIN_GAP = 4
-    local MAX_GAP = 12
-    local PULSE_SPEED = 3
-    local timePassed = 0
-
-    --// MODERN SCREEN GUI ESP CACHE SYSTEM
-    local EspGui = Instance.new("ScreenGui")
-    EspGui.Name = "CoreAssetCache"
-    EspGui.ResetOnSpawn = false
-    EspGui.IgnoreGuiInset = true
-    EspGui.Parent = lp:WaitForChild("PlayerGui")
-
-    local BOX_THICKNESS = 1.5
-    local LINE_THICKNESS = 1
-    local BOX_SIZE_MULTIPLIER = 1300 
-    local HEALTH_BAR_WIDTH = 3
-    local HEALTH_BAR_OFFSET = 5
-    local SHADOW_COLOR = Color3.fromRGB(0, 0, 0)
-
-    local EspRegistry = {}
-
-    local function createEspElements(player)
-        if player == lp or EspRegistry[player] then return end
-
-        local elements = {}
-
-        -- Box Structure
-        local BoxFrame = Instance.new("Frame", EspGui)
-        BoxFrame.BackgroundTransparency = 1
-        BoxFrame.Visible = false
-        
-        local Shadow = Instance.new("Frame", BoxFrame)
-        Shadow.Size = UDim2.new(1, 0, 1, 0)
-        Shadow.Position = UDim2.new(0, 1, 0, 1)
-        Shadow.BackgroundTransparency = 1
-        local ShadowStroke = Instance.new("UIStroke", Shadow)
-        ShadowStroke.Color = SHADOW_COLOR
-        ShadowStroke.Thickness = BOX_THICKNESS + 0.5
-        ShadowStroke.Transparency = 0.4
-
-        local Outline = Instance.new("Frame", BoxFrame)
-        Outline.Size = UDim2.new(1, 0, 1, 0)
-        Outline.BackgroundTransparency = 1
-        local Stroke = Instance.new("UIStroke", Outline)
-        Stroke.Thickness = BOX_THICKNESS
-
-        elements.Box = BoxFrame
-        elements.BoxStroke = Stroke
-
-        -- Line Tracer Structure
-        local TracerLine = Instance.new("Frame", EspGui)
-        TracerLine.AnchorPoint = Vector2.new(0.5, 0.5)
-        TracerLine.BorderSizePixel = 0
-        TracerLine.Visible = false
-        
-        local TracerShadow = Instance.new("Frame", TracerLine)
-        TracerShadow.Size = UDim2.new(1, 0, 1, 0)
-        TracerShadow.Position = UDim2.new(0, 1, 0, 1)
-        TracerShadow.BackgroundColor3 = SHADOW_COLOR
-        TracerShadow.BackgroundTransparency = 0.4
-        TracerShadow.BorderSizePixel = 0
-        TracerShadow.ZIndex = 0
-
-        elements.Tracer = TracerLine
-
-        -- Health Meter Structure
-        local HealthContainer = Instance.new("Frame", EspGui)
-        HealthContainer.BackgroundColor3 = SHADOW_COLOR
-        HealthContainer.BackgroundTransparency = 0.3
-        HealthContainer.BorderSizePixel = 0
-        HealthContainer.Visible = false
-        Instance.new("UICorner", HealthContainer).CornerRadius = UDim.new(1, 0)
-
-        local HealthFill = Instance.new("Frame", HealthContainer)
-        HealthFill.BorderSizePixel = 0
-        HealthFill.AnchorPoint = Vector2.new(0, 1)
-        HealthFill.Position = UDim2.new(0, 0, 1, 0)
-        Instance.new("UICorner", HealthFill).CornerRadius = UDim.new(1, 0)
-
-        elements.HealthBar = HealthContainer
-        elements.HealthFill = HealthFill
-
-        -- Name Tag Text Structure
-        local TagLabel = Instance.new("TextLabel", EspGui)
-        TagLabel.BackgroundTransparency = 1
-        TagLabel.AnchorPoint = Vector2.new(0.5, 1)
-        TagLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TagLabel.Font = Enum.Font.FredokaOne
-        TagLabel.TextSize = 13
-        TagLabel.Visible = false
-        local TextStroke = Instance.new("UIStroke", TagLabel)
-        TextStroke.Color = SHADOW_COLOR
-        TextStroke.Thickness = 1.5
-
-        elements.Tag = TagLabel
-        EspRegistry[player] = elements
-    end
-
-    local function removeEspElements(player)
-        if EspRegistry[player] then
-            for _, object in pairs(EspRegistry[player]) do
-                if typeof(object) == "Instance" then object:Destroy() end
-            end
-            EspRegistry[player] = nil
+--// COMBINED RENDERING PIPELINE
+rs.RenderStepped:Connect(function(deltaTime)
+    -- Aimbot Thread Execution
+    if Settings.Enabled then
+        local target = get_best_target()
+        if target then
+            local targetPos = camera:WorldToViewportPoint(target.Position)
+            vim:SendMouseMoveEvent(targetPos.X, targetPos.Y, game)
         end
     end
-
-    for _, p in ipairs(players:GetPlayers()) do createEspElements(p) end
-    players.PlayerAdded:Connect(createEspElements)
-    players.PlayerRemoving:Connect(removeEspElements)
-
-    --// COMBINED RENDERING PIPELINE
-    rs.RenderStepped:Connect(function(deltaTime)
-        if Settings.Enabled then
-            local target = get_best_target()
-            if target then
-                local targetPos = camera:WorldToViewportPoint(target.Position)
-                vim:SendMouseMoveEvent(targetPos.X, targetPos.Y, game)
-            end
-        end
-        
-        if Settings.CrosshairEnabled then
-            crosshairAnchor.Visible = true
-            local workingColor = Color3.fromRGB(255,255,255)
-            if Settings.CrosshairColorMode == "Rainbow" then
-                workingColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-            else
-                workingColor = colorPresets[Settings.CrosshairColorMode] or Color3.fromRGB(160, 32, 240)
-            end
-            
-            cTop.BackgroundColor3 = workingColor
-            cBottom.BackgroundColor3 = workingColor
-            cLeft.BackgroundColor3 = workingColor
-            cRight.BackgroundColor3 = workingColor
-            
-            crosshairAnchor.Rotation = (crosshairAnchor.Rotation + (SPIN_SPEED * deltaTime)) % 360
-            timePassed = timePassed + (deltaTime * PULSE_SPEED)
-            local alpha = (math.sin(timePassed) + 1) / 2
-            local currentGap = MIN_GAP + (alpha * (MAX_GAP - MIN_GAP))
-            
-            cTop.Size = UDim2.new(0, THICKNESS, 0, BASE_LENGTH)
-            cTop.Position = UDim2.new(0, 0, 0, -currentGap)
-            cBottom.Size = UDim2.new(0, THICKNESS, 0, BASE_LENGTH)
-            cBottom.Position = UDim2.new(0, 0, 0, currentGap)
-            cLeft.Size = UDim2.new(0, BASE_LENGTH, 0, THICKNESS)
-            cLeft.Position = UDim2.new(0, -currentGap, 0, 0)
-            cRight.Size = UDim2.new(0, BASE_LENGTH, 0, THICKNESS)
-            cRight.Position = UDim2.new(0, currentGap, 0, 0)
+    
+    -- Crosshair Thread Rendering Logic
+    if Settings.CrosshairEnabled then
+        crosshairAnchor.Visible = true
+        local workingColor = Color3.fromRGB(255,255,255)
+        if Settings.CrosshairColorMode == "Rainbow" then
+            workingColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
         else
-            crosshairAnchor.Visible = false
+            workingColor = colorPresets[Settings.CrosshairColorMode] or Color3.fromRGB(160, 32, 240)
         end
+        
+        cTop.BackgroundColor3 = workingColor
+        cBottom.BackgroundColor3 = workingColor
+        cLeft.BackgroundColor3 = workingColor
+        cRight.BackgroundColor3 = workingColor
+        
+        crosshairAnchor.Rotation = (crosshairAnchor.Rotation + (SPIN_SPEED * deltaTime)) % 360
+        timePassed = timePassed + (deltaTime * PULSE_SPEED)
+        local alpha = (math.sin(timePassed) + 1) / 2
+        local currentGap = MIN_GAP + (alpha * (MAX_GAP - MIN_GAP))
+        
+        cTop.Size = UDim2.new(0, THICKNESS, 0, BASE_LENGTH)
+        cTop.Position = UDim2.new(0, 0, 0, -currentGap)
+        cBottom.Size = UDim2.new(0, THICKNESS, 0, BASE_LENGTH)
+        cBottom.Position = UDim2.new(0, 0, 0, currentGap)
+        cLeft.Size = UDim2.new(0, BASE_LENGTH, 0, THICKNESS)
+        cLeft.Position = UDim2.new(0, -currentGap, 0, 0)
+        cRight.Size = UDim2.new(0, BASE_LENGTH, 0, THICKNESS)
+        cRight.Position = UDim2.new(0, currentGap, 0, 0)
+    else
+        crosshairAnchor.Visible = false
+    end
 
-        local currentThemeColor = Color3.fromRGB(255,255,255)
-        if Settings.EspColorMode == "Rainbow" then
-            currentThemeColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
-        else
-            currentThemeColor = colorPresets[Settings.EspColorMode] or Color3.fromRGB(0, 180, 255)
-        end
+    -- Global ESP Computation Pipeline
+    local currentThemeColor = Color3.fromRGB(255,255,255)
+    if Settings.EspColorMode == "Rainbow" then
+        currentThemeColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+    else
+        currentThemeColor = colorPresets[Settings.EspColorMode] or Color3.fromRGB(0, 180, 255)
+    end
 
-        for player, cache in pairs(EspRegistry) do
-            local character = player.Character
-            local rootPart = character and character:FindFirstChild("HumanoidRootPart")
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    for player, cache in pairs(EspRegistry) do
+        local character = player.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 
-            if rootPart and humanoid and humanoid.Health > 0 then
-                local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-                local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
+        if rootPart and humanoid and humanoid.Health > 0 then
+            local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+            local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
 
-                if onScreen and distance <= Settings.MaxEspDistance and distance >= 1 then
-                    local sizeX = BOX_SIZE_MULTIPLIER / distance
-                    local sizeY = sizeX * 1.45 
-                    local boxPosX = screenPos.X - (sizeX / 2)
-                    local boxPosY = screenPos.Y - (sizeY / 2)
+            -- Applied strict distance boundary check (Only renders if between 1 and 400 studs away)
+            if onScreen and distance <= Settings.MaxEspDistance and distance >= 1 then
+                
+                -- 1. BOX VISUAL GENERATION
+                local sizeX = BOX_SIZE_MULTIPLIER / distance
+                local sizeY = sizeX * 1.45 -- Marginally taller ratio adjustment to match the tighter width
+                local boxPosX = screenPos.X - (sizeX / 2)
+                local boxPosY = screenPos.Y - (sizeY / 2)
 
-                    if Settings.EspBoxes then
-                        cache.Box.Position = UDim2.new(0, boxPosX, 0, boxPosY)
-                        cache.Box.Size = UDim2.new(0, sizeX, 0, sizeY)
-                        cache.BoxStroke.Color = currentThemeColor
-                        cache.Box.Visible = true
-                    else
-                        cache.Box.Visible = false
-                    end
-
-                    if Settings.EspLines then
-                        local vSize = camera.ViewportSize
-                        local startX, startY = vSize.X / 2, vSize.Y
-                        local dx, dy = screenPos.X - startX, screenPos.Y - startY
-                        local length = math.sqrt(dx^2 + dy^2)
-                        local angle = math.atan2(dy, dx)
-
-                        cache.Tracer.Position = UDim2.new(0, startX + dx/2, 0, startY + dy/2)
-                        cache.Tracer.Size = UDim2.new(0, length, 0, LINE_THICKNESS)
-                        cache.Tracer.BackgroundColor3 = currentThemeColor
-                        cache.Tracer.Rotation = math.deg(angle)
-                        cache.Tracer.Visible = true
-                    else
-                        cache.Tracer.Visible = false
-                    end
-
-                    if Settings.EspHealth then
-                        local hPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-                        cache.HealthBar.Position = UDim2.new(0, boxPosX - HEALTH_BAR_OFFSET - HEALTH_BAR_WIDTH, 0, boxPosY)
-                        cache.HealthBar.Size = UDim2.new(0, HEALTH_BAR_WIDTH, 0, sizeY)
-                        cache.HealthFill.Size = UDim2.new(1, 0, hPercent, 0)
-                        
-                        local green = Color3.fromRGB(0, 255, 140)
-                        local red = Color3.fromRGB(255, 50, 50)
-                        cache.HealthFill.BackgroundColor3 = red:Lerp(green, hPercent)
-                        cache.HealthBar.Visible = true
-                    else
-                        cache.HealthBar.Visible = false
-                    end
-
-                    if Settings.EspNames then
-                        cache.Tag.Position = UDim2.new(0, screenPos.X, 0, boxPosY - 4)
-                        cache.Tag.Text = string.format("%s [%d Studs]", player.DisplayName, math.floor(distance))
-                        cache.Tag.TextSize = math.clamp(14 - (distance / 100), 10, 14)
-                        cache.Tag.Visible = true
-                    else
-                        cache.Tag.Visible = false
-                    end
+                if Settings.EspBoxes then
+                    cache.Box.Position = UDim2.new(0, boxPosX, 0, boxPosY)
+                    cache.Box.Size = UDim2.new(0, sizeX, 0, sizeY)
+                    cache.BoxStroke.Color = currentThemeColor
+                    cache.Box.Visible = true
                 else
-                    cache.Box.Visible = false cache.Tracer.Visible = false cache.HealthBar.Visible = false cache.Tag.Visible = false
+                    cache.Box.Visible = false
+                end
+
+                -- 2. SNAPLINES TRACER MATH
+                if Settings.EspLines then
+                    local vSize = camera.ViewportSize
+                    local startX, startY = vSize.X / 2, vSize.Y
+                    local dx, dy = screenPos.X - startX, screenPos.Y - startY
+                    local length = math.sqrt(dx^2 + dy^2)
+                    local angle = math.atan2(dy, dx)
+
+                    cache.Tracer.Position = UDim2.new(0, startX + dx/2, 0, startY + dy/2)
+                    cache.Tracer.Size = UDim2.new(0, length, 0, LINE_THICKNESS)
+                    cache.Tracer.BackgroundColor3 = currentThemeColor
+                    cache.Tracer.Rotation = math.deg(angle)
+                    cache.Tracer.Visible = true
+                else
+                    cache.Tracer.Visible = false
+                end
+
+                -- 3. INTERPOLATED HEALTH BAR COMPONENT
+                if Settings.EspHealth then
+                    local hPercent = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
+                    cache.HealthBar.Position = UDim2.new(0, boxPosX - HEALTH_BAR_OFFSET - HEALTH_BAR_WIDTH, 0, boxPosY)
+                    cache.HealthBar.Size = UDim2.new(0, HEALTH_BAR_WIDTH, 0, sizeY)
+                    cache.HealthFill.Size = UDim2.new(1, 0, hPercent, 0)
+                    
+                    local green = Color3.fromRGB(0, 255, 140)
+                    local red = Color3.fromRGB(255, 50, 50)
+                    cache.HealthFill.BackgroundColor3 = red:Lerp(green, hPercent)
+                    cache.HealthBar.Visible = true
+                else
+                    cache.HealthBar.Visible = false
+                end
+
+                -- 4. TEXT TAG INTERACTION
+                if Settings.EspNames then
+                    cache.Tag.Position = UDim2.new(0, screenPos.X, 0, boxPosY - 4)
+                    cache.Tag.Text = string.format("%s [%d Studs]", player.DisplayName, math.floor(distance))
+                    cache.Tag.TextSize = math.clamp(14 - (distance / 100), 10, 14)
+                    cache.Tag.Visible = true
+                else
+                    cache.Tag.Visible = false
                 end
             else
                 cache.Box.Visible = false cache.Tracer.Visible = false cache.HealthBar.Visible = false cache.Tag.Visible = false
             end
-        end
-    end)
-
-    task.spawn(function()
-        task.wait(3) 
-        local modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules", 5)
-        if not modules then return end
-        local utility = require(modules:WaitForChild("Utility", 5))
-        if not utility then return end
-        
-        local old_rc = utility.Raycast
-        utility.Raycast = function(...)
-            local args = {...}
-            if Settings.Enabled and args[4] == 999 then
-                local hit = get_best_target()
-                if hit then
-                    local jitter = Vector3.new(math.random(-5,5)/100, math.random(-5,5)/100, math.random(-5,5)/100)
-                    args[3] = hit.Position + jitter 
-                end
-            end
-            return old_rc(table.unpack(args))
-        end
-    end)
-
-    --// CLEAN UP EXISTING UI
-    local oldUi = cg:FindFirstChild("PremiumGhostUI")
-    if oldUi then oldUi:Destroy() end
-
-    --// MODERN CORE UI ELEMENTS
-    local Screen = Instance.new("ScreenGui", cg)
-    Screen.Name = "PremiumGhostUI"
-    Screen.ResetOnSpawn = false
-
-    local Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 450, 0, 440)
-    Main.Position = UDim2.new(0.5, -225, 0.4, -220)
-    Main.BackgroundColor3 = Color3.fromRGB(12, 11, 15)
-    Main.Active = true
-    Main.Draggable = true 
-
-    local MainCorner = Instance.new("UICorner", Main)
-    MainCorner.CornerRadius = UDim.new(0, 16)
-
-    local Stroke = Instance.new("UIStroke", Main)
-    Stroke.Color = Color3.fromRGB(40, 35, 50)
-    Stroke.Thickness = 1.5
-    Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-
-    local Header = Instance.new("Frame", Main)
-    Header.Size = UDim2.new(1, 0, 0, 45)
-    Header.BackgroundColor3 = Color3.fromRGB(18, 16, 24)
-    Header.BorderSizePixel = 0
-
-    local HeaderCorner = Instance.new("UICorner", Header)
-    HeaderCorner.CornerRadius = UDim.new(0, 16)
-
-    local HeaderFix = Instance.new("Frame", Header)
-    HeaderFix.Size = UDim2.new(1, 0, 0, 15)
-    HeaderFix.Position = UDim2.new(0, 0, 1, -15)
-    HeaderFix.BackgroundColor3 = Color3.fromRGB(18, 16, 24)
-    HeaderFix.BorderSizePixel = 0
-
-    local Title = Instance.new("TextLabel", Header)
-    Title.Text = "PURPLE GHOST v5"
-    Title.Size = UDim2.new(1, 0, 1, 0)
-    Title.TextColor3 = Color3.fromRGB(150, 100, 255)
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 16
-    Title.BackgroundTransparency = 1
-
-    local TabSystem = Instance.new("Frame", Main)
-    TabSystem.Size = UDim2.new(1, -30, 0, 35)
-    TabSystem.Position = UDim2.new(0, 15, 0, 55)
-    TabSystem.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-
-    local TabSystemCorner = Instance.new("UICorner", TabSystem)
-    TabSystemCorner.CornerRadius = UDim.new(0, 8)
-
-    local TabIndicator = Instance.new("Frame", TabSystem)
-    TabIndicator.Size = UDim2.new(0.25, -4, 1, -6) 
-    TabIndicator.Position = UDim2.new(0, 3, 0, 3)
-    TabIndicator.BackgroundColor3 = Color3.fromRGB(140, 0, 255)
-
-    local TabIndicatorCorner = Instance.new("UICorner", TabIndicator)
-    TabIndicatorCorner.CornerRadius = UDim.new(0, 6)
-
-    local Pages = {}
-    local function create_page(name, visible)
-        local page = Instance.new("ScrollingFrame", Main)
-        page.Name = name .. "Page"
-        page.Size = UDim2.new(1, -30, 1, -115)
-        page.Position = UDim2.new(0, 15, 0, 110)
-        page.BackgroundTransparency = 1
-        page.CanvasSize = UDim2.new(0, 0, 0, 750)
-        page.ScrollBarThickness = 3
-        page.ScrollBarImageColor3 = Color3.fromRGB(40,35,50)
-        page.Visible = visible
-        
-        local layout = Instance.new("UIListLayout", page)
-        layout.Padding = UDim.new(0, 8)
-        
-        Pages[name] = page
-        return page
-    end
-
-    local CombatPage = create_page("Combat", true)
-    local EspPage = create_page("ESP", false)
-    local VisualsPage = create_page("Visuals", false)
-    local PlayersPage = create_page("Players", false)
-
-    local playerLabel = Instance.new("TextLabel", PlayersPage)
-    playerLabel.Text = "[ LocalPlayer Speed & Jump Modifications Coming Soon ]"
-    playerLabel.Size = UDim2.new(1, 0, 0, 40)
-    playerLabel.TextColor3 = Color3.fromRGB(100, 95, 115)
-    playerLabel.Font = Enum.Font.GothamSemibold
-    playerLabel.TextSize = 12
-    playerLabel.BackgroundTransparency = 1
-
-    local function create_toggle(parent, name, default, callback)
-        local tFrame = Instance.new("Frame", parent)
-        tFrame.Size = UDim2.new(1, -6, 0, 46)
-        tFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-        
-        local tCorner = Instance.new("UICorner", tFrame)
-        tCorner.CornerRadius = UDim.new(0, 8)
-        
-        local tStroke = Instance.new("UIStroke", tFrame)
-        tStroke.Color = default and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)
-        tStroke.Thickness = 1
-        
-        local label = Instance.new("TextLabel", tFrame)
-        label.Text = name
-        label.Size = UDim2.new(0.6, 0, 1, 0)
-        label.Position = UDim2.new(0, 12, 0, 0)
-        label.TextColor3 = Color3.fromRGB(230, 230, 235)
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.BackgroundTransparency = 1
-
-        local switch = Instance.new("TextButton", tFrame)
-        switch.Size = UDim2.new(0, 46, 0, 22)
-        switch.Position = UDim2.new(1, -58, 0.5, -11)
-        switch.BackgroundColor3 = default and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(40, 35, 50)
-        switch.Text = ""
-        
-        local switchCorner = Instance.new("UICorner", switch)
-        switchCorner.CornerRadius = UDim.new(1, 0)
-        
-        local pill = Instance.new("Frame", switch)
-        pill.Size = UDim2.new(0, 16, 0, 16)
-        pill.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
-        pill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
-
-        local active = default
-        switch.MouseButton1Click:Connect(function()
-            active = not active
-            callback(active)
-            play_tick()
-            
-            ts:Create(switch, tweenInfo, {BackgroundColor3 = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(40, 35, 50)}):Play()
-            ts:Create(pill, tweenInfo, {Position = active and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)}):Play()
-            ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)}):Play()
-        end)
-        
-        tFrame.MouseEnter:Connect(function()
-            ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(160, 50, 255) or Color3.fromRGB(60, 50, 80)}):Play()
-        end)
-        tFrame.MouseLeave:Connect(function()
-            ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)}):Play()
-        end)
-    end
-
-    local function create_slider(parent, name, min, max, default, callback)
-        local sFrame = Instance.new("Frame", parent)
-        sFrame.Size = UDim2.new(1, -6, 0, 60)
-        sFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-        
-        local sCorner = Instance.new("UICorner", sFrame)
-        sCorner.CornerRadius = UDim.new(0, 8)
-        
-        local sStroke = Instance.new("UIStroke", sFrame)
-        sStroke.Color = Color3.fromRGB(35, 30, 45)
-        sStroke.Thickness = 1
-
-        local label = Instance.new("TextLabel", sFrame)
-        label.Text = name
-        label.Size = UDim2.new(0.65, 0, 0, 25)
-        label.Position = UDim2.new(0, 12, 0, 4)
-        label.TextColor3 = Color3.fromRGB(230, 230, 235)
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 12
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.BackgroundTransparency = 1
-
-        local valLabel = Instance.new("TextLabel", sFrame)
-        valLabel.Text = tostring(default) .. "/" .. tostring(max)
-        valLabel.Position = UDim2.new(1, -142, 0, 4)
-        valLabel.Size = UDim2.new(0.3, 0, 0, 25)
-        valLabel.TextColor3 = Color3.fromRGB(150, 120, 240)
-        valLabel.Font = Enum.Font.GothamBold
-        valLabel.TextSize = 12
-        valLabel.TextXAlignment = Enum.TextXAlignment.Right
-        valLabel.BackgroundTransparency = 1
-
-        local bar = Instance.new("TextButton", sFrame)
-        bar.Size = UDim2.new(1, -24, 0, 6)
-        bar.Position = UDim2.new(0, 12, 0, 40)
-        bar.BackgroundColor3 = Color3.fromRGB(45, 40, 55)
-        bar.Text = ""
-        Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
-        
-        local fill = Instance.new("Frame", bar)
-        fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-        fill.BackgroundColor3 = Color3.fromRGB(140, 0, 255)
-        Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
-
-        local dot = Instance.new("Frame", bar)
-        dot.Position = UDim2.new((default - min) / (max - min), -6, 0.5, -6)
-        dot.Size = UDim2.new(0, 12, 0, 12)
-        dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-        
-        local dotStroke = Instance.new("UIStroke", dot)
-        dotStroke.Color = Color3.fromRGB(140, 0, 255)
-        dotStroke.Thickness = 2
-
-        local dragging = false
-        local lastVal = default
-
-        local function update_slider(input)
-            local inputPos = input.Position.X
-            local barAbsPos = bar.AbsolutePosition.X
-            local barAbsSize = bar.AbsoluteSize.X
-            local percentage = math.clamp((inputPos - barAbsPos) / barAbsSize, 0, 1)
-            
-            local value = math.floor(min + (max - min) * percentage)
-            valLabel.Text = tostring(value) .. "/" .. tostring(max)
-            
-            fill.Size = UDim2.new(percentage, 0, 1, 0)
-            dot.Position = UDim2.new(percentage, -6, 0.5, -6)
-            
-            if value ~= lastVal then
-                lastVal = value
-                play_tick()
-            end
-            
-            callback(value)
-        end
-
-        bar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                update_slider(input)
-                ts:Create(sStroke, tweenInfo, {Color = Color3.fromRGB(140, 0, 255)}):Play()
-            end
-        end)
-
-        uis.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                update_slider(input)
-            end
-        end)
-
-        uis.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                if dragging then
-                    dragging = false
-                    ts:Create(sStroke, tweenInfo, {Color = Color3.fromRGB(35, 30, 45)}):Play()
-                end
-            end
-        end)
-    end
-
-    local function create_color_cycler(parent, name, defaultMode, callback)
-        local ccFrame = Instance.new("Frame", parent)
-        ccFrame.Size = UDim2.new(1, -6, 0, 46)
-        ccFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-        
-        local ccCorner = Instance.new("UICorner", ccFrame)
-        ccCorner.CornerRadius = UDim.new(0, 8)
-        
-        local ccStroke = Instance.new("UIStroke", ccFrame)
-        ccStroke.Color = Color3.fromRGB(35, 30, 45)
-        ccStroke.Thickness = 1
-
-        local label = Instance.new("TextLabel", ccFrame)
-        label.Text = name
-        label.Size = UDim2.new(0.5, 0, 1, 0)
-        label.Position = UDim2.new(0, 12, 0, 0)
-        label.TextColor3 = Color3.fromRGB(230, 230, 235)
-        label.Font = Enum.Font.GothamBold
-        label.TextSize = 12
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.BackgroundTransparency = 1
-
-        local cycleBtn = Instance.new("TextButton", ccFrame)
-        cycleBtn.Size = UDim2.new(0, 100, 0, 24)
-        cycleBtn.Position = UDim2.new(1, -112, 0.5, -12)
-        cycleBtn.Text = defaultMode
-        cycleBtn.Font = Enum.Font.GothamBold
-        cycleBtn.TextSize = 11
-        cycleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", cycleBtn).CornerRadius = UDim.new(0, 6)
-        
-        local modes = {"Red", "Blue", "Purple", "Yellow", "Pink", "Orange", "Rainbow"}
-        local displayColors = {
-            ["Red"] = Color3.fromRGB(255, 50, 50),
-            ["Blue"] = Color3.fromRGB(0, 180, 255),
-            ["Purple"] = Color3.fromRGB(160, 32, 240),
-            ["Yellow"] = Color3.fromRGB(215, 190, 20),
-            ["Pink"] = Color3.fromRGB(255, 105, 180),
-            ["Orange"] = Color3.fromRGB(255, 140, 0),
-            ["Rainbow"] = Color3.fromRGB(40, 35, 50)
-        }
-        
-        local currentIndex = table.find(modes, defaultMode) or 3
-        cycleBtn.BackgroundColor3 = displayColors[modes[currentIndex]]
-
-        cycleBtn.MouseButton1Click:Connect(function()
-            currentIndex = (currentIndex % #modes) + 1
-            local selectedMode = modes[currentIndex]
-            cycleBtn.Text = selectedMode
-            
-            ts:Create(cycleBtn, tweenInfo, {BackgroundColor3 = displayColors[selectedMode]}):Play()
-            play_tick()
-            callback(selectedMode)
-        end)
-    end
-
-    local function setup_tabs(tabButtonsConfig)
-        for index, config in ipairs(tabButtonsConfig) do
-            local btn = Instance.new("TextButton", TabSystem)
-            btn.Size = UDim2.new(0.25, 0, 1, 0) 
-            btn.Position = UDim2.new(0.25 * (index - 1), 0, 0, 0)
-            btn.BackgroundTransparency = 1
-            btn.Text = config.Name
-            btn.Font = Enum.Font.GothamBold
-            btn.TextSize = 11
-            btn.TextColor3 = config.Active and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(140, 140, 150)
-            btn.ZIndex = 3
-
-            btn.MouseButton1Click:Connect(function()
-                play_tick()
-                ts:Create(TabIndicator, tweenInfo, {Position = UDim2.new(0.25 * (index - 1), 3, 0, 3)}):Play()
-                
-                for _, otherBtn in pairs(TabSystem:GetChildren()) do
-                    if otherBtn:IsA("TextButton") then
-                        ts:Create(otherBtn, tweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 150)}):Play()
-                    end
-                end
-                ts:Create(btn, tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                
-                for pageName, pageFrame in pairs(Pages) do
-                    pageFrame.Visible = (pageName == config.Name)
-                end
-            end)
+        else
+            cache.Box.Visible = false cache.Tracer.Visible = false cache.HealthBar.Visible = false cache.Tag.Visible = false
         end
     end
+end)
 
-    setup_tabs({
-        {Name = "Combat", Active = true},
-        {Name = "ESP", Active = false},
-        {Name = "Visuals", Active = false},
-        {Name = "Players", Active = false}
-    })
+task.spawn(function()
+    task.wait(3) 
+    local modules = game:GetService("ReplicatedStorage"):WaitForChild("Modules", 5)
+    if not modules then return end
+    local utility = require(modules:WaitForChild("Utility", 5))
+    if not utility then return end
+    
+    local old_rc = utility.Raycast
+    utility.Raycast = function(...)
+        local args = {...}
+        if Settings.Enabled and args[4] == 999 then
+            local hit = get_best_target()
+            if hit then
+                local jitter = Vector3.new(math.random(-5,5)/100, math.random(-5,5)/100, math.random(-5,5)/100)
+                args[3] = hit.Position + jitter 
+            end
+        end
+        return old_rc(table.unpack(args))
+    end
+end)
 
-    create_toggle(CombatPage, "SILENT AIM", Settings.Enabled, function(v) Settings.Enabled = v end)
-    create_toggle(CombatPage, "WALL CHECK", Settings.WallCheck, function(v) Settings.WallCheck = v end)
-    create_slider(CombatPage, "HEADSHOT RATE (%)", 1, 100, Settings.HeadshotRate, function(v) Settings.HeadshotRate = v end)
+--// CLEAN UP EXISTING UI
+local oldUi = cg:FindFirstChild("PremiumGhostUI")
+if oldUi then oldUi:Destroy() end
 
-    create_toggle(EspPage, "ESP BOX OUTLINES", Settings.EspBoxes, function(v) Settings.EspBoxes = v end)
-    create_toggle(EspPage, "ESP LINE TRACERS", Settings.EspLines, function(v) Settings.EspLines = v end)
-    create_toggle(EspPage, "ESP HEALTH BARS", Settings.EspHealth, function(v) Settings.EspHealth = v end)
-    create_toggle(EspPage, "ESP NAMES & STUDS", Settings.EspNames, function(v) Settings.EspNames = v end)
-    create_color_cycler(EspPage, "ESP COLOR CONFIG", Settings.EspColorMode, function(mode) Settings.EspColorMode = mode end)
+--// MODERN CORE UI ELEMENTS
+local Screen = Instance.new("ScreenGui", cg)
+Screen.Name = "PremiumGhostUI"
+Screen.ResetOnSpawn = false
 
-    create_toggle(VisualsPage, "SHOW FOV CIRCLE", Settings.FovVisible, function(v) Settings.FovVisible = v end)
-    create_toggle(VisualsPage, "FILLED FOV CIRCLE", Settings.FovFilled, function(v) Settings.FovFilled = v end) 
-    create_slider(VisualsPage, "FOV RADIUS SIZE", 50, 400, Settings.FOV, function(v) Settings.FOV = v end)
-    create_toggle(VisualsPage, "ANIMATED CROSSHAIR", Settings.CrosshairEnabled, function(v) Settings.CrosshairEnabled = v end)
-    create_color_cycler(VisualsPage, "CROSSHAIR COLOR", Settings.CrosshairColorMode, function(mode) Settings.CrosshairColorMode = mode end)
+local Main = Instance.new("Frame", Screen)
+Main.Size = UDim2.new(0, 450, 0, 440)
+Main.Position = UDim2.new(0.5, -225, 0.4, -220)
+Main.BackgroundColor3 = Color3.fromRGB(12, 11, 15)
+Main.Active = true
+Main.Draggable = true 
 
-    local Tgl = Instance.new("TextButton", Screen)
-    Tgl.Size = UDim2.new(0, 54, 0, 54)
-    Tgl.Position = UDim2.new(0, 20, 0.5, -27)
-    Tgl.BackgroundColor3 = Color3.fromRGB(15, 12, 22)
-    Tgl.Text = "GHOST"
-    Tgl.TextColor3 = Color3.fromRGB(140, 0, 255)
-    Tgl.Font = Enum.Font.GothamBold
-    Tgl.TextSize = 11
+local MainCorner = Instance.new("UICorner", Main)
+MainCorner.CornerRadius = UDim.new(0, 16)
 
-    local TglCorner = Instance.new("UICorner", Tgl)
-    TglCorner.CornerRadius = UDim.new(1, 0)
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(40, 35, 50)
+Stroke.Thickness = 1.5
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-    local TglStroke = Instance.new("UIStroke", Tgl)
-    TglStroke.Color = Color3.fromRGB(140, 0, 255)
-    TglStroke.Thickness = 2
+local Header = Instance.new("Frame", Main)
+Header.Size = UDim2.new(1, 0, 0, 45)
+Header.BackgroundColor3 = Color3.fromRGB(18, 16, 24)
+Header.BorderSizePixel = 0
 
-    Tgl.MouseButton1Click:Connect(function()
-        Main.Visible = not Main.Visible
+local HeaderCorner = Instance.new("UICorner", Header)
+HeaderCorner.CornerRadius = UDim.new(0, 16)
+
+local HeaderFix = Instance.new("Frame", Header)
+HeaderFix.Size = UDim2.new(1, 0, 0, 15)
+HeaderFix.Position = UDim2.new(0, 0, 1, -15)
+HeaderFix.BackgroundColor3 = Color3.fromRGB(18, 16, 24)
+HeaderFix.BorderSizePixel = 0
+
+local Title = Instance.new("TextLabel", Header)
+Title.Text = "PURPLE GHOST v5"
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.TextColor3 = Color3.fromRGB(150, 100, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.BackgroundTransparency = 1
+
+local TabSystem = Instance.new("Frame", Main)
+TabSystem.Size = UDim2.new(1, -30, 0, 35)
+TabSystem.Position = UDim2.new(0, 15, 0, 55)
+TabSystem.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
+
+local TabSystemCorner = Instance.new("UICorner", TabSystem)
+TabSystemCorner.CornerRadius = UDim.new(0, 8)
+
+local TabIndicator = Instance.new("Frame", TabSystem)
+TabIndicator.Size = UDim2.new(0.25, -4, 1, -6) 
+TabIndicator.Position = UDim2.new(0, 3, 0, 3)
+TabIndicator.BackgroundColor3 = Color3.fromRGB(140, 0, 255)
+
+local TabIndicatorCorner = Instance.new("UICorner", TabIndicator)
+TabIndicatorCorner.CornerRadius = UDim.new(0, 6)
+
+-- Navigation Content Containers
+local Pages = {}
+local function create_page(name, visible)
+    local page = Instance.new("ScrollingFrame", Main)
+    page.Name = name .. "Page"
+    page.Size = UDim2.new(1, -30, 1, -115)
+    page.Position = UDim2.new(0, 15, 0, 110)
+    page.BackgroundTransparency = 1
+    page.CanvasSize = UDim2.new(0, 0, 0, 750)
+    page.ScrollBarThickness = 3
+    page.ScrollBarImageColor3 = Color3.fromRGB(40,35,50)
+    page.Visible = visible
+    
+    local layout = Instance.new("UIListLayout", page)
+    layout.Padding = UDim.new(0, 8)
+    
+    Pages[name] = page
+    return page
+end
+
+-- Tabs ordered logically: Combat -> ESP -> Visuals -> Players
+local CombatPage = create_page("Combat", true)
+local EspPage = create_page("ESP", false)
+local VisualsPage = create_page("Visuals", false)
+local PlayersPage = create_page("Players", false)
+
+local playerLabel = Instance.new("TextLabel", PlayersPage)
+playerLabel.Text = "[ LocalPlayer Speed & Jump Modifications Coming Soon ]"
+playerLabel.Size = UDim2.new(1, 0, 0, 40)
+playerLabel.TextColor3 = Color3.fromRGB(100, 95, 115)
+playerLabel.Font = Enum.Font.GothamSemibold
+playerLabel.TextSize = 12
+playerLabel.BackgroundTransparency = 1
+
+--// PREMIUM FRAME COMPONENTS
+local function create_toggle(parent, name, default, callback)
+    local tFrame = Instance.new("Frame", parent)
+    tFrame.Size = UDim2.new(1, -6, 0, 46)
+    tFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
+    
+    local tCorner = Instance.new("UICorner", tFrame)
+    tCorner.CornerRadius = UDim.new(0, 8)
+    
+    local tStroke = Instance.new("UIStroke", tFrame)
+    tStroke.Color = default and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)
+    tStroke.Thickness = 1
+    
+    local label = Instance.new("TextLabel", tFrame)
+    label.Text = name
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.TextColor3 = Color3.fromRGB(230, 230, 235)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BackgroundTransparency = 1
+
+    local switch = Instance.new("TextButton", tFrame)
+    switch.Size = UDim2.new(0, 46, 0, 22)
+    switch.Position = UDim2.new(1, -58, 0.5, -11)
+    switch.BackgroundColor3 = default and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(40, 35, 50)
+    switch.Text = ""
+    
+    local switchCorner = Instance.new("UICorner", switch)
+    switchCorner.CornerRadius = UDim.new(1, 0)
+    
+    local pill = Instance.new("Frame", switch)
+    pill.Size = UDim2.new(0, 16, 0, 16)
+    pill.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+    pill.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(1, 0)
+
+    local active = default
+    switch.MouseButton1Click:Connect(function()
+        active = not active
+        callback(active)
         play_tick()
-        ts:Create(TglStroke, tweenInfo, {Color = Main.Visible and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(60, 50, 80)}):Play()
+        
+        ts:Create(switch, tweenInfo, {BackgroundColor3 = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(40, 35, 50)}):Play()
+        ts:Create(pill, tweenInfo, {Position = active and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)}):Play()
+        ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)}):Play()
     end)
-
-    Tgl.MouseEnter:Connect(function()
-        ts:Create(Tgl, tweenInfo, {BackgroundColor3 = Color3.fromRGB(25, 20, 35)}):Play()
+    
+    tFrame.MouseEnter:Connect(function()
+        ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(160, 50, 255) or Color3.fromRGB(60, 50, 80)}):Play()
     end)
-    Tgl.MouseLeave:Connect(function()
-        ts:Create(Tgl, tweenInfo, {BackgroundColor3 = Color3.fromRGB(15, 12, 22)}):Play()
+    tFrame.MouseLeave:Connect(function()
+        ts:Create(tStroke, tweenInfo, {Color = active and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(35, 30, 45)}):Play()
     end)
 end
 
---// KEY SYSTEM WINDOW INTERFACE INITIALIZATION
-local cachedKey = readfile_safely(KEY_FILE)
-if cachedKey and (cachedKey == CORRECT_KEY or cachedKey == CORRECT_KEY:lower()) then
-    InitMainScript()
-else
-    local cg = game:GetService("CoreGui")
-    local ts = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local function create_slider(parent, name, min, max, default, callback)
+    local sFrame = Instance.new("Frame", parent)
+    sFrame.Size = UDim2.new(1, -6, 0, 60)
+    sFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
+    
+    local sCorner = Instance.new("UICorner", sFrame)
+    sCorner.CornerRadius = UDim.new(0, 8)
+    
+    local sStroke = Instance.new("UIStroke", sFrame)
+    sStroke.Color = Color3.fromRGB(35, 30, 45)
+    sStroke.Thickness = 1
 
-    local KeyScreen = Instance.new("ScreenGui", cg)
-    KeyScreen.Name = "GhostKeySystemUI"
-    KeyScreen.ResetOnSpawn = false
+    local label = Instance.new("TextLabel", sFrame)
+    label.Text = name
+    label.Size = UDim2.new(0.65, 0, 0, 25)
+    label.Position = UDim2.new(0, 12, 0, 4)
+    label.TextColor3 = Color3.fromRGB(230, 230, 235)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BackgroundTransparency = 1
 
-    local KeyFrame = Instance.new("Frame", KeyScreen)
-    KeyFrame.Size = UDim2.new(0, 360, 0, 230)
-    KeyFrame.Position = UDim2.new(0.5, -180, 0.4, -115)
-    KeyFrame.BackgroundColor3 = Color3.fromRGB(14, 13, 18)
-    KeyFrame.Active = true
-    KeyFrame.Draggable = true
+    local valLabel = Instance.new("TextLabel", sFrame)
+    valLabel.Text = tostring(default) .. "/" .. tostring(max)
+    valLabel.Position = UDim2.new(1, -142, 0, 4)
+    valLabel.Size = UDim2.new(0.3, 0, 0, 25)
+    valLabel.TextColor3 = Color3.fromRGB(150, 120, 240)
+    valLabel.Font = Enum.Font.GothamBold
+    valLabel.TextSize = 12
+    valLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valLabel.BackgroundTransparency = 1
 
-    local KFCorner = Instance.new("UICorner", KeyFrame)
-    KFCorner.CornerRadius = UDim.new(0, 12)
+    local bar = Instance.new("TextButton", sFrame)
+    bar.Size = UDim2.new(1, -24, 0, 6)
+    bar.Position = UDim2.new(0, 12, 0, 40)
+    bar.BackgroundColor3 = Color3.fromRGB(45, 40, 55)
+    bar.Text = ""
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+    
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(140, 0, 255)
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
-    local KFStroke = Instance.new("UIStroke", KeyFrame)
-    KFStroke.Color = Color3.fromRGB(45, 40, 55)
-    KFStroke.Thickness = 1.5
+    local dot = Instance.new("Frame", bar)
+    dot.Position = UDim2.new((default - min) / (max - min), -6, 0.5, -6)
+    dot.Size = UDim2.new(0, 12, 0, 12)
+    dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    
+    local dotStroke = Instance.new("UIStroke", dot)
+    dotStroke.Color = Color3.fromRGB(140, 0, 255)
+    dotStroke.Thickness = 2
 
-    local KHeader = Instance.new("Frame", KeyFrame)
-    KHeader.Size = UDim2.new(1, 0, 0, 40)
-    KHeader.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-    KHeader.BorderSizePixel = 0
-    Instance.new("UICorner", KHeader).CornerRadius = UDim.new(0, 12)
+    local dragging = false
+    local lastVal = default
 
-    local KHeaderFix = Instance.new("Frame", KHeader)
-    KHeaderFix.Size = UDim2.new(1, 0, 0, 10)
-    KHeaderFix.Position = UDim2.new(0, 0, 1, -10)
-    KHeaderFix.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
-    KHeaderFix.BorderSizePixel = 0
-
-    local KTitle = Instance.new("TextLabel", KHeader)
-    KTitle.Text = "🔑 GHOST KEY GATEWAY"
-    KTitle.Size = UDim2.new(1, 0, 1, 0)
-    KTitle.TextColor3 = Color3.fromRGB(150, 100, 255)
-    KTitle.Font = Enum.Font.GothamBold
-    KTitle.TextSize = 13
-    KTitle.BackgroundTransparency = 1
-
-    local KTextBox = Instance.new("TextBox", KeyFrame)
-    KTextBox.Size = UDim2.new(1, -40, 0, 42)
-    KTextBox.Position = UDim2.new(0, 20, 0, 65)
-    KTextBox.BackgroundColor3 = Color3.fromRGB(22, 20, 28)
-    KTextBox.Text = ""
-    KTextBox.PlaceholderText = "Enter Key Here..."
-    KTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    KTextBox.PlaceholderColor3 = Color3.fromRGB(100, 95, 115)
-    KTextBox.Font = Enum.Font.GothamSemibold
-    KTextBox.TextSize = 13
-    Instance.new("UICorner", KTextBox).CornerRadius = UDim.new(0, 8)
-    local KTbStroke = Instance.new("UIStroke", KTextBox)
-    KTbStroke.Color = Color3.fromRGB(40, 35, 50)
-    KTbStroke.Thickness = 1
-
-    local EnterBtn = Instance.new("TextButton", KeyFrame)
-    EnterBtn.Size = UDim2.new(0, 155, 0, 38)
-    EnterBtn.Position = UDim2.new(0, 20, 0, 125)
-    EnterBtn.BackgroundColor3 = Color3.fromRGB(140, 0, 255)
-    EnterBtn.Text = "Enter Key"
-    EnterBtn.Font = Enum.Font.GothamBold
-    EnterBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    EnterBtn.TextSize = 12
-    Instance.new("UICorner", EnterBtn).CornerRadius = UDim.new(0, 8)
-
-    local GetKeyBtn = Instance.new("TextButton", KeyFrame)
-    GetKeyBtn.Size = UDim2.new(0, 155, 0, 38)
-    GetKeyBtn.Position = UDim2.new(1, -175, 0, 125)
-    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(30, 26, 40)
-    GetKeyBtn.Text = "Get Key (Link)"
-    GetKeyBtn.Font = Enum.Font.GothamBold
-    GetKeyBtn.TextColor3 = Color3.fromRGB(180, 170, 200)
-    GetKeyBtn.TextSize = 12
-    Instance.new("UICorner", GetKeyBtn).CornerRadius = UDim.new(0, 8)
-    local GetKeyStroke = Instance.new("UIStroke", GetKeyBtn)
-    GetKeyStroke.Color = Color3.fromRGB(45, 40, 55)
-
-    local InfoLabel = Instance.new("TextLabel", KeyFrame)
-    InfoLabel.Size = UDim2.new(1, -40, 0, 30)
-    InfoLabel.Position = UDim2.new(0, 20, 0, 180)
-    InfoLabel.BackgroundTransparency = 1
-    InfoLabel.Text = "Key system status: Active"
-    InfoLabel.TextColor3 = Color3.fromRGB(120, 115, 135)
-    InfoLabel.Font = Enum.Font.GothamSemibold
-    InfoLabel.TextSize = 11
-
-    GetKeyBtn.MouseButton1Click:Connect(function()
-        if setclipboard then
-            setclipboard(KEY_LINK)
-            InfoLabel.Text = "✅ Link copied to clipboard!"
-            InfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-        else
-            InfoLabel.Text = "❌ Clipboard functions not supported."
-            InfoLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+    local function update_slider(input)
+        local inputPos = input.Position.X
+        local barAbsPos = bar.AbsolutePosition.X
+        local barAbsSize = bar.AbsoluteSize.X
+        local percentage = math.clamp((inputPos - barAbsPos) / barAbsSize, 0, 1)
+        
+        local value = math.floor(min + (max - min) * percentage)
+        valLabel.Text = tostring(value) .. "/" .. tostring(max)
+        
+        fill.Size = UDim2.new(percentage, 0, 1, 0)
+        dot.Position = UDim2.new(percentage, -6, 0.5, -6)
+        
+        if value ~= lastVal then
+            lastVal = value
+            play_tick()
         end
-        task.wait(2)
-        InfoLabel.Text = "Key system status: Active"
-        InfoLabel.TextColor3 = Color3.fromRGB(120, 115, 135)
+        
+        callback(value)
+    end
+
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            update_slider(input)
+            ts:Create(sStroke, tweenInfo, {Color = Color3.fromRGB(140, 0, 255)}):Play()
+        end
     end)
 
-    EnterBtn.MouseButton1Click:Connect(function()
-        local inputtedText = KTextBox.Text
-        if inputtedText == CORRECT_KEY or inputtedText == CORRECT_KEY:lower() then
-            InfoLabel.Text = "🔑 Key Access Granted! Loading Script..."
-            InfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-            writefile_safely(KEY_FILE, inputtedText)
-            task.wait(1)
-            KeyScreen:Destroy()
-            InitMainScript()
-        else
-            InfoLabel.Text = "❌ Incorrect Key. Try again!"
-            InfoLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-            KTextBox.Text = ""
+    uis.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            update_slider(input)
+        end
+    end)
+
+    uis.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                dragging = false
+                ts:Create(sStroke, tweenInfo, {Color = Color3.fromRGB(35, 30, 45)}):Play()
+            end
         end
     end)
 end
+
+local function create_color_cycler(parent, name, defaultMode, callback)
+    local ccFrame = Instance.new("Frame", parent)
+    ccFrame.Size = UDim2.new(1, -6, 0, 46)
+    ccFrame.BackgroundColor3 = Color3.fromRGB(20, 18, 26)
+    
+    local ccCorner = Instance.new("UICorner", ccFrame)
+    ccCorner.CornerRadius = UDim.new(0, 8)
+    
+    local ccStroke = Instance.new("UIStroke", ccFrame)
+    ccStroke.Color = Color3.fromRGB(35, 30, 45)
+    ccStroke.Thickness = 1
+
+    local label = Instance.new("TextLabel", ccFrame)
+    label.Text = name
+    label.Size = UDim2.new(0.5, 0, 1, 0)
+    label.Position = UDim2.new(0, 12, 0, 0)
+    label.TextColor3 = Color3.fromRGB(230, 230, 235)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BackgroundTransparency = 1
+
+    local cycleBtn = Instance.new("TextButton", ccFrame)
+    cycleBtn.Size = UDim2.new(0, 100, 0, 24)
+    cycleBtn.Position = UDim2.new(1, -112, 0.5, -12)
+    cycleBtn.Text = defaultMode
+    cycleBtn.Font = Enum.Font.GothamBold
+    cycleBtn.TextSize = 11
+    cycleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", cycleBtn).CornerRadius = UDim.new(0, 6)
+    
+    local modes = {"Red", "Blue", "Purple", "Yellow", "Pink", "Orange", "Rainbow"}
+    local displayColors = {
+        ["Red"] = Color3.fromRGB(255, 50, 50),
+        ["Blue"] = Color3.fromRGB(0, 180, 255),
+        ["Purple"] = Color3.fromRGB(160, 32, 240),
+        ["Yellow"] = Color3.fromRGB(215, 190, 20),
+        ["Pink"] = Color3.fromRGB(255, 105, 180),
+        ["Orange"] = Color3.fromRGB(255, 140, 0),
+        ["Rainbow"] = Color3.fromRGB(40, 35, 50)
+    }
+    
+    local currentIndex = table.find(modes, defaultMode) or 3
+    cycleBtn.BackgroundColor3 = displayColors[modes[currentIndex]]
+
+    cycleBtn.MouseButton1Click:Connect(function()
+        currentIndex = (currentIndex % #modes) + 1
+        local selectedMode = modes[currentIndex]
+        cycleBtn.Text = selectedMode
+        
+        ts:Create(cycleBtn, tweenInfo, {BackgroundColor3 = displayColors[selectedMode]}):Play()
+        play_tick()
+        callback(selectedMode)
+    end)
+end
+
+--// MULTI-TAB SELECTION NAVIGATION ENGINE
+local function setup_tabs(tabButtonsConfig)
+    for index, config in ipairs(tabButtonsConfig) do
+        local btn = Instance.new("TextButton", TabSystem)
+        btn.Size = UDim2.new(0.25, 0, 1, 0) -- Split evenly into 4 clean segments
+        btn.Position = UDim2.new(0.25 * (index - 1), 0, 0, 0)
+        btn.BackgroundTransparency = 1
+        btn.Text = config.Name
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 11
+        btn.TextColor3 = config.Active and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(140, 140, 150)
+        btn.ZIndex = 3
+
+        btn.MouseButton1Click:Connect(function()
+            play_tick()
+            ts:Create(TabIndicator, tweenInfo, {Position = UDim2.new(0.25 * (index - 1), 3, 0, 3)}):Play()
+            
+            for _, otherBtn in pairs(TabSystem:GetChildren()) do
+                if otherBtn:IsA("TextButton") then
+                    ts:Create(otherBtn, tweenInfo, {TextColor3 = Color3.fromRGB(140, 140, 150)}):Play()
+                end
+            end
+            ts:Create(btn, tweenInfo, {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            
+            for pageName, pageFrame in pairs(Pages) do
+                pageFrame.Visible = (pageName == config.Name)
+            end
+        end)
+    end
+end
+
+setup_tabs({
+    {Name = "Combat", Active = true},
+    {Name = "ESP", Active = false},
+    {Name = "Visuals", Active = false},
+    {Name = "Players", Active = false}
+})
+
+--// ASSEMBLE POPULATED TABS
+-- COMBAT PAGE
+create_toggle(CombatPage, "SILENT AIM", Settings.Enabled, function(v) Settings.Enabled = v end)
+create_toggle(CombatPage, "WALL CHECK", Settings.WallCheck, function(v) Settings.WallCheck = v end)
+create_slider(CombatPage, "HEADSHOT RATE (%)", 1, 100, Settings.HeadshotRate, function(v) Settings.HeadshotRate = v end)
+
+-- ESP PAGE (DEDICATED CONTROLS SWAPPED TO FALSE / OFF BY DEFAULT)
+create_toggle(EspPage, "ESP BOX OUTLINES", Settings.EspBoxes, function(v) Settings.EspBoxes = v end)
+create_toggle(EspPage, "ESP LINE TRACERS", Settings.EspLines, function(v) Settings.EspLines = v end)
+create_toggle(EspPage, "ESP HEALTH BARS", Settings.EspHealth, function(v) Settings.EspHealth = v end)
+create_toggle(EspPage, "ESP NAMES & STUDS", Settings.EspNames, function(v) Settings.EspNames = v end)
+create_color_cycler(EspPage, "ESP COLOR CONFIG", Settings.EspColorMode, function(mode) Settings.EspColorMode = mode end)
+
+-- VISUALS PAGE (ORIGINAL ENVIRONMENT CONTROLS UNTOUCHED)
+create_toggle(VisualsPage, "SHOW FOV CIRCLE", Settings.FovVisible, function(v) Settings.FovVisible = v end)
+create_toggle(VisualsPage, "FILLED FOV CIRCLE", Settings.FovFilled, function(v) Settings.FovFilled = v end) 
+create_slider(VisualsPage, "FOV RADIUS SIZE", 50, 400, Settings.FOV, function(v) Settings.FOV = v end)
+create_toggle(VisualsPage, "ANIMATED CROSSHAIR", Settings.CrosshairEnabled, function(v) Settings.CrosshairEnabled = v end)
+create_color_cycler(VisualsPage, "CROSSHAIR COLOR", Settings.CrosshairColorMode, function(mode) Settings.CrosshairColorMode = mode end)
+
+--// CORE MINIMIZE MENU HUD TOGGLE BUTTON
+local Tgl = Instance.new("TextButton", Screen)
+Tgl.Size = UDim2.new(0, 54, 0, 54)
+Tgl.Position = UDim2.new(0, 20, 0.5, -27)
+Tgl.BackgroundColor3 = Color3.fromRGB(15, 12, 22)
+Tgl.Text = "GHOST"
+Tgl.TextColor3 = Color3.fromRGB(140, 0, 255)
+Tgl.Font = Enum.Font.GothamBold
+Tgl.TextSize = 11
+
+local TglCorner = Instance.new("UICorner", Tgl)
+TglCorner.CornerRadius = UDim.new(1, 0)
+
+local TglStroke = Instance.new("UIStroke", Tgl)
+TglStroke.Color = Color3.fromRGB(140, 0, 255)
+TglStroke.Thickness = 2
+
+Tgl.MouseButton1Click:Connect(function()
+    Main.Visible = not Main.Visible
+    play_tick()
+    ts:Create(TglStroke, tweenInfo, {Color = Main.Visible and Color3.fromRGB(140, 0, 255) or Color3.fromRGB(60, 50, 80)}):Play()
+end)
+
+Tgl.MouseEnter:Connect(function()
+    ts:Create(Tgl, tweenInfo, {BackgroundColor3 = Color3.fromRGB(25, 20, 35)}):Play()
+end)
+Tgl.MouseLeave:Connect(function()
+    ts:Create(Tgl, tweenInfo, {BackgroundColor3 = Color3.fromRGB(15, 12, 22)}):Play()
+end)
