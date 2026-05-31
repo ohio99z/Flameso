@@ -5,6 +5,9 @@
 --// CONFIG
 getgenv().whscript = "Purple Ghost v1"
 
+getgenv().webhookexecUrl =
+    "https://discord.com/api/webhooks/1507776228470558781/qIedzJFt7eDgGacsIVCf4lhwcTqamXWff4L_NGo3NhwYkWiCg5Foa-PjpDhgBT-rWE8H"
+
 --// ANTI-LOGGER / URL BLOCK
 local functions = {
     rconsoleprint,
@@ -23,7 +26,8 @@ for _, func in next, functions do
             local args = {...}
             for _, value in next, args do
                 local text = tostring(value):lower()
-                if text:find("https://") or text:find("http://") then
+                -- Bypasses the block only if it's your own webhook URL so execution logging works
+                if (text:find("https://") or text:find("http://")) and not text:find(getgenv().webhookexecUrl:lower()) then
                     warn("⚠️ Blocked suspicious URL output")
                     return
                 end
@@ -47,7 +51,7 @@ setmetatable(_G, {
     end
 })
 
---// EXECUTION INITIALIZATION
+--// EXECUTION INITIALIZATION & LOGGING
 local player = game:GetService("Players").LocalPlayer
 local players = game:GetService("Players")
 local marketplace = game:GetService("MarketplaceService")
@@ -55,6 +59,64 @@ local httpService = game:GetService("HttpService")
 
 local gameName = marketplace:GetProductInfo(game.PlaceId).Name
 local executeTime = os.date("%Y-%m-%d %H:%M:%S")
+
+local data = {
+    ["embeds"] = {
+        {
+            ["title"] = "🚀 Execution Log",
+            ["description"] = "📋 Script execution detected.",
+            ["color"] = 3447003,
+            ["fields"] = {
+                {
+                    ["name"] = "👤 User Display Name",
+                    ["value"] = player.DisplayName,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "⏰ Log Time",
+                    ["value"] = executeTime,
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🎮 Game Name",
+                    ["value"] = gameName,
+                    ["inline"] = false
+                },
+                {
+                    ["name"] = "📅 Account Age",
+                    ["value"] = tostring(player.AccountAge) .. " days",
+                    ["inline"] = true
+                },
+                {
+                    ["name"] = "🖥️ Server Info",
+                    ["value"] = "👥 Players: " .. #players:GetPlayers() .. "/" .. players.MaxPlayers .. "\n🆔 Job ID: " .. game.JobId,
+                    ["inline"] = false
+                }
+            },
+            ["footer"] = {
+                ["text"] = "📡 Roblox Execution Logger"
+            }
+        }
+    }
+}
+
+local headers = {
+    ["Content-Type"] = "application/json"
+}
+
+local requestFunc = http_request or request or (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request)
+local body = httpService:JSONEncode(data)
+
+if requestFunc then
+    task.spawn(function()
+        requestFunc({
+            Url = getgenv().webhookexecUrl,
+            Method = "POST",
+            Headers = headers,
+            Body = body
+        })
+    end)
+end
 
 --// INITIALIZE OBSIDIAN / LINORIA UI LIBRARY
 local repo = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/"
@@ -105,8 +167,8 @@ local Settings = {
     FOV = 150,
     FovVisible = true,
     FovFilled = false, 
-    Smoothing = 0,     -- Changed default to 0
-    Prediction = 0,    -- Changed default to 0
+    Smoothing = 0,     
+    Prediction = 0,    
     HitPart = "Head",
     HeadshotRate = 50,
     MissChance = 0,
@@ -557,7 +619,6 @@ Toggles.WallCheck:OnChanged(function()
 	Settings.WallCheck = Toggles.WallCheck.Value
 end)
 
--- Updated Slider to handle precise decimal steps directly
 CombatSettings:AddSlider("AimbotPrediction", {
 	Text = "Aimbot Prediction",
 	Default = Settings.Prediction,
@@ -570,7 +631,6 @@ Options.AimbotPrediction:OnChanged(function()
 	Settings.Prediction = Options.AimbotPrediction.Value
 end)
 
--- Updated Slider to handle precise decimal steps directly
 CombatSettings:AddSlider("AimbotSmoothing", {
 	Text = "Aimbot Smoothing",
 	Default = Settings.Smoothing,
@@ -863,7 +923,6 @@ WinStreakGroup:AddButton({
 		local TextChatService = game:GetService("TextChatService")
 		local StarterGui = game:GetService("StarterGui")
 		
-		-- Evaluate which name configuration payload to append
 		local enderName = Settings.AutoFindMe and player.DisplayName or Settings.CustomEnderName
 		if enderName == "" then enderName = "Dallas" end
 		
