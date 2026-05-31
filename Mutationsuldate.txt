@@ -105,8 +105,8 @@ local Settings = {
     FOV = 150,
     FovVisible = true,
     FovFilled = false, 
-    Smoothing = 0.15,
-    Prediction = 0.05,
+    Smoothing = 0,     -- Changed default to 0
+    Prediction = 0,    -- Changed default to 0
     HitPart = "Head",
     HeadshotRate = 50,
     MissChance = 0,
@@ -557,28 +557,30 @@ Toggles.WallCheck:OnChanged(function()
 	Settings.WallCheck = Toggles.WallCheck.Value
 end)
 
+-- Updated Slider to handle precise decimal steps directly
 CombatSettings:AddSlider("AimbotPrediction", {
 	Text = "Aimbot Prediction",
-	Default = Settings.Prediction * 100,
+	Default = Settings.Prediction,
 	Min = 0,
-	Max = 20,
-	Rounding = 0,
+	Max = 0.2,
+	Rounding = 2,
 	Tooltip = "Velocity tracking scale adjustment value",
 })
 Options.AimbotPrediction:OnChanged(function()
-	Settings.Prediction = Options.AimbotPrediction.Value / 100
+	Settings.Prediction = Options.AimbotPrediction.Value
 end)
 
+-- Updated Slider to handle precise decimal steps directly
 CombatSettings:AddSlider("AimbotSmoothing", {
 	Text = "Aimbot Smoothing",
-	Default = Settings.Smoothing * 100,
+	Default = Settings.Smoothing,
 	Min = 0,
-	Max = 95,
-	Rounding = 0,
+	Max = 0.95,
+	Rounding = 2,
 	Tooltip = "Interpolation rate parameter configuration",
 })
 Options.AimbotSmoothing:OnChanged(function()
-	Settings.Smoothing = Options.AimbotSmoothing.Value / 100
+	Settings.Smoothing = Options.AimbotSmoothing.Value
 end)
 
 CombatSettings:AddSlider("HeadshotRate", {
