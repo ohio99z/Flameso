@@ -132,7 +132,7 @@ Library.ShowCustomCursor = true
 Library.NotifySide = "Left"
 
 local Window = Library:CreateWindow({
-	Title = "Purple Ghost v1",
+	Title = "Purple Ghost v1 https://discord.gg/sVQTbrAMRx",
 	Center = true,
 	AutoShow = true,
 	Resizable = true,
